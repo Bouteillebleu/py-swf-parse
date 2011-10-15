@@ -57,12 +57,12 @@ def read_tag_headers(file):
         
 def get_tag_parser_from_number(number):
     tag_functions = {9:  tag_parsers.set_background_color,
+                     26: tag_parsers.place_object_2,
                      39: tag_parsers.define_sprite}
     if number in tag_functions:
         return tag_functions[number]
     else:
         return tag_parsers.not_implemented
-
 
 
 if __name__ == "__main__":

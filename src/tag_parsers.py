@@ -10,6 +10,35 @@ def set_background_color(data):
     rgb = rgb_color_record(data)
     print "Background colour: RGB =",rgb
 
+def place_object_2(data):
+    flags = struct.unpack('<B',data[0])[0]
+    flag_has_clip_actions = (1 << 7) & flags
+    flag_has_clip_depth = (1 << 6) & flags
+    flag_has_name = (1 << 5) & flags
+    flag_has_ratio = (1 << 4) & flags
+    flag_has_color_transform = (1 << 3) & flags
+    flag_has_matrix = (1 << 2) & flags
+    flag_has_character = (1 << 1) & flags
+    flag_move = (1 << 0) & flags
+    depth = struct.unpack('<H',data[1:3])[0]
+    remaining_data = data[3:]
+    if flag_has_character:
+        character_id = struct.unpack('<H',data[0:2])[0]
+        print "CharacterID:",character_id
+        remaining_data = remaining_data[2:]
+    if flag_has_matrix:
+        pass
+    if flag_has_color_transform:
+        pass
+    if flag_has_ratio:
+        pass
+    if flag_has_name:
+        pass
+    if flag_has_clip_depth:
+        pass
+    if flag_has_clip_actions:
+        pass
+
 def define_sprite(data):
     #print '%r' % data
     sprite_id = struct.unpack('<H',data[0:2])[0]
