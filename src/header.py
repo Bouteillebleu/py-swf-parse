@@ -1,6 +1,7 @@
 # "D:/Coding/sim_original_test.swf"
 # First go - using http://the-labs.com/MacromediaFlash/SWF-Spec/SWFfileformat.html as guide.
 import struct
+import tag_parsers
 
 def main():
     f = open("D:/Coding/sim_original_test.swf", "rb")
@@ -48,7 +49,7 @@ def read_tag_headers(file):
     tag_number = 0
     tag_type_name = ''
     while tag_type_name != 'End':
-        print "Reading tag",tag_number
+        print " == Reading tag",tag_number,"== "
         header = struct.unpack('H',file.read(2))[0]
         tag_type = header >> 6 # Ignore the bottom 6 bits
         tag_length = header & 0x3F # Only keep the bottom 6 bits
@@ -59,57 +60,91 @@ def read_tag_headers(file):
         print "Tag type:",tag_type,tag_type_name
         print "Tag length:",tag_length,"bytes"
         tag_number += 1
-        file.read(tag_length) # Skip it for now.
+        tag_parser = get_tag_parser_from_number(tag_type)
+        tag_parser(file.read(tag_length)) # Call an appropriate function to 
         
 def get_tag_type_name_from_number(number):
-    tags = {4:  "PlaceObject",
-            26: "PlaceObject2",
-            5:  "RemoveObject",
-            28: "RemoveObject2",
+    tags = {0:  "End",
             1:  "ShowFrame",
+            2:  "DefineShape",
+            4:  "PlaceObject",
+            5:  "RemoveObject",
+            6:  "DefineBits",
+            7:  "DefineButton",
+            8:  "JPEGTables",
             9:  "SetBackgroundColor",
-            43: "FrameLabel",
+            10: "DefineFont",
+            11: "DefineText",
+            12: "DoAction",
+            13: "DefineFontInfo",
+            14: "DefineSound",
+            15: "StartSound",
+            17: "DefineButtonSound",
+            18: "SoundStreamHead",
+            19: "SoundStreamBlock",
+            20: "DefineBitsLossless",
+            21: "DefineBitsJPEG2",
+            22: "DefineShape2",
+            23: "DefineButtonCxform",
             24: "Protect",
-            0:  "End",
+            26: "PlaceObject2",
+            28: "RemoveObject2",
+            32: "DefineShape3",
+            33: "DefineText2",
+            34: "DefineButton2",
+            35: "DefineBitsJPEG3",
+            36: "DefineBitsLossless2",
+            37: "DefineEditText",
+            39: "DefineSprite",
+            43: "FrameLabel",
+            45: "SoundStreamHead2",
+            46: "DefineMorphShape",
+            48: "DefineFont2",
             56: "ExportAssets",
             57: "ImportAssets",
             58: "EnableDebugger",
-            64: "EnableDebugger2",
-            12: "DoAction",
             59: "DoInitAction",
-            2:  "DefineShape",
-            22: "DefineShape2",
-            32: "DefineShape3",
-            6:  "DefineBits",
-            8:  "JPEGTables",
-            21: "DefineBitsJPEG2",
-            35: "DefineBitsJPEG3",
-            20: "DefineBitsLossless",
-            36: "DefineBitsLossless2",
-            46: "DefineMorphShape",
-            10: "DefineFont",
-            13: "DefineFontInfo",
-            62: "DefineFontInfo2",
-            48: "DefineFont2",
-            11: "DefineText",
-            33: "DefineText2",
-            37: "DefineEditText",
-            14: "DefineSound",
-            15: "StartSound",
-            18: "SoundStreamHead",
-            45: "SoundStreamHead2",
-            19: "SoundStreamBlock",
-            7:  "DefineButton",
-            34: "DefineButton2",
-            23: "DefineButtonCxform",
-            17: "DefineButtonSound",
-            39: "DefineSprite",
             60: "DefineVideoStream",
-            61: "VideoFrame"}
+            61: "VideoFrame",
+            62: "DefineFontInfo2",
+            64: "EnableDebugger2"}
+    # 65: "ScriptLimits",
+    # 66: "SetTabIndex",
+    # 69: "FileAttributes",
+    # 70: "PlaceObject3",
+    # 71: "ImportAssets2",
+    # 73: "DefineFontAlignZones",
+    # 74: "CSMTextSettings",
+    # 75: "DefineFont3",
+    # 76: "SymbolClass",
+    # 77: "Metadata",
+    # 78: "DefineScalingGrid",
+    # 82: "DoABC",
+    # 83: "DefineShape4",
+    # 84: "DefineMorphShape2",
+    # 86: "DefineSceneAndFrameLabelData",
+    # 87: "DefineBinaryData",
+    # 88: "DefineFontName",
+    # 89: "StartSound2",
+    # 90: "DefineBitJPEG4",
+    # 91: "DefineFont4"
+    # 73 is DefineFontAlignZones, allegedly v8 or later.
+    # 74 is CSMTextSettings, also v8 or later.
+    # 75 is DefineFont3, also also v8 or later. Weird.
+    # Worth checking whether their descriptions in the v10 spec match the fields here.
     if number in tags:
         return tags[number]
     else:
         return ""        
-        
+
+def get_tag_parser_from_number(number):
+    tag_functions = {9: tag_parsers.set_background_color}
+    if number in tag_functions:
+        return tag_functions[number]
+    else:
+        return tag_parsers.not_implemented
+
+
+
 if __name__ == "__main__":
     main()
