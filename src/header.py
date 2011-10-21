@@ -2,6 +2,7 @@
 # First go - using http://the-labs.com/MacromediaFlash/SWF-Spec/SWFfileformat.html as guide.
 import struct
 import tag_parsers
+import datatypes
 
 def main():
     f = open("D:/Coding/sim_original_test.swf", "rb")
@@ -43,7 +44,7 @@ def read_tag_headers(file):
         if tag_length == 0x3f:
             # If it's actually 63, we're using the long record header form instead.
             tag_length = struct.unpack('<L',file.read(4))[0]
-        tag_type_name = tag_parsers.get_tag_type_name_from_number(tag_type)
+        tag_type_name = datatypes.get_tag_type_name_from_number(tag_type)
         if tag_type_name not in tags_in_file:
             tags_in_file.append(tag_type_name)
         print "Tag type:",tag_type,tag_type_name
@@ -57,6 +58,7 @@ def read_tag_headers(file):
         
 def get_tag_parser_from_number(number):
     tag_functions = {9:  tag_parsers.set_background_color,
+                     21: tag_parsers.define_bits_jpeg_2,
                      26: tag_parsers.place_object_2,
                      39: tag_parsers.define_sprite}
     if number in tag_functions:
