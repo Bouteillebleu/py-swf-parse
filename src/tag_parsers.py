@@ -4,24 +4,50 @@ Created on 15 Oct 2011
 @author: Bluebottle
 '''
 import struct
-from datatypes import record_header, rgb_color_record
+import action_parsers
+from datatypes import record_header, rgb_color_record, get_action_type_name_from_number
 
 def set_background_color(data):
     # Data should be an RGB color record.
     rgb = rgb_color_record(data)
     print "Background colour: RGB =",rgb
 
+def do_action(data):
+    action_number = 0
+    action_name = ''
+    remaining_data = data
+    print "DEBUG: len(data) is",len(remaining_data)
+    while action_name != 'ActionEndFlag':
+        print "   == Reading action",action_number,"== "
+        action_code = struct.unpack('<B',remaining_data[0])[0]
+        if action_code >= 0x80:
+            # If it's actually 63, we're using the long record header form instead.
+            action_length = struct.unpack('<H',remaining_data[1:3])[0]
+            remaining_data = remaining_data[3:]
+        else:
+            action_length = None
+            remaining_data = remaining_data[1:]
+        action_name = get_action_type_name_from_number(action_code)
+        print "  Action type:",action_code,action_name
+        action_number += 1
+        if action_length:
+            print "  Action length:",action_length,"bytes"
+            action_parser = get_action_parser_from_number(action_code)
+            action_parser(remaining_data[0:action_length])
+            remaining_data = remaining_data[action_length:]
+         
+        
 def define_bits_jpeg_2(data):
     character_id = struct.unpack('<H',data[0:2])[0]
     print "Character ID:",character_id
     filename = "%d.jpeg" % character_id
     try:
         f = open(filename,'wb')
-        remaining_data = data
+        remaining_data = data[2:]
         while len(remaining_data) > 0:
             #print repr(remaining_data[0:4])
-            chunk = struct.pack('<c',remaining_data[0])
-            f.write(chunk)
+            #chunk = struct.pack('<c',remaining_data[0])
+            f.write(remaining_data[0])
             remaining_data = remaining_data[1:]
         #else:
         #    format_string = "<" + ("c" * len(remaining_data))
@@ -77,5 +103,14 @@ def define_sprite(data):
 def not_implemented(data):
     print "No parser for this tag yet."
     
-# == Data type readers (to pull out into another module?) ==
+# == The list of action parser functions ==
 
+def get_action_parser_from_number(number):
+    action_functions = {0x81: action_parsers.goto_frame,
+                        0x88: action_parsers.constant_pool,
+                        0x96: action_parsers.push,
+                        }
+    if number in action_functions:
+        return action_functions[number]
+    else:
+        return action_parsers.not_implemented
