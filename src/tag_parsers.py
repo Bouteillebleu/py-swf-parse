@@ -7,9 +7,9 @@ import struct
 import action_parsers
 from datatypes import record_header, rgb_color_record, get_action_type_name_from_number
 
-def set_background_color(data):
+def set_background_color(stream):
     # Data should be an RGB color record.
-    rgb = rgb_color_record(data)
+    rgb = rgb_color_record(stream)
     print "Background colour: RGB =",rgb
 
 def do_action(data):

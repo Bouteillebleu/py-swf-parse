@@ -4,12 +4,13 @@ Created on 20 Oct 2011
 @author: Bluebottle
 '''
 import struct
+from bitstring import ConstBitStream
 
-def rgb_color_record(data):
+def rgb_color_record(stream):
     # Data should be 3 bytes long: R, G and B values, each read as UI8.
-    r = struct.unpack('<B',data[0])[0]
-    g = struct.unpack('<B',data[1])[0]
-    b = struct.unpack('<B',data[2])[0]
+    r = stream.read('uintle:8')
+    g = stream.read('uintle:8')
+    b = stream.read('uintle:8')
     return r,g,b
 
 def matrix(data):
@@ -112,7 +113,7 @@ def get_tag_type_name_from_number(number):
     if number in tags:
         return tags[number]
     else:
-        return ""
+        return str(number)
 
 def get_action_type_name_from_number(number):
     actions = {0x00:'ActionEndFlag',
