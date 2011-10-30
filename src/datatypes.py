@@ -4,7 +4,6 @@ Created on 20 Oct 2011
 @author: Bluebottle
 '''
 import struct
-from bitstring import ConstBitStream
 
 def rgb_color_record(stream):
     # Data should be 3 bytes long: R, G and B values, each read as UI8.
@@ -25,21 +24,18 @@ def matrix(data):
     # - field as requested, in some appropriate form
     # - current data, active byte as data[0]
     # - current bit to focus on (as in input, the last one processed is the previous one)
-    
-    
 
-def record_header(data):
-    header = struct.unpack('<H',data[0:2])[0]
+def record_header(stream):
+    header = stream.read('uintle:16')
+    is_long_header = False
     tag_type = header >> 6 # Ignore the bottom 6 bits
     tag_length = header & 0x3F # Only keep the bottom 6 bits
     if tag_length == 0x3f:
         # If it's actually 63, we're using the long record header form instead.
-        tag_length = struct.unpack('<L',data[0:4])[0]
-        remaining_data = data[4:]
-    else:
-        remaining_data = data[2:]
+        is_long_header = True
+        tag_length = stream.read('intle:32')
     tag_type_name = get_tag_type_name_from_number(tag_type)
-    return tag_type_name, len(remaining_data)
+    return tag_type_name, tag_length, is_long_header
 
 def get_tag_type_name_from_number(number):
     tags = {0:  "End",

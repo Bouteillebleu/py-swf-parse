@@ -1,6 +1,5 @@
 # "D:/Coding/sim_original_test.swf"
 # First go - using http://the-labs.com/MacromediaFlash/SWF-Spec/SWFfileformat.html as guide.
-import struct
 import tag_parsers
 import datatypes
 from bitstring import ConstBitStream
@@ -65,10 +64,10 @@ def read_tag_headers(stream):
         
 def get_tag_parser_from_number(number):
     tag_functions = {9:  tag_parsers.set_background_color,
-                     #12: tag_parsers.do_action,
+                     12: tag_parsers.do_action,
                      #21: tag_parsers.define_bits_jpeg_2,
                      #26: tag_parsers.place_object_2,
-                     #39: tag_parsers.define_sprite
+                     39: tag_parsers.define_sprite
                      }
     if number in tag_functions:
         return tag_functions[number]

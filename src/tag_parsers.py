@@ -12,30 +12,25 @@ def set_background_color(stream):
     rgb = rgb_color_record(stream)
     print "Background colour: RGB =",rgb
 
-def do_action(data):
+def do_action(stream):
     action_number = 0
     action_name = ''
-    remaining_data = data
-    print "DEBUG: len(data) is",len(remaining_data)
+    #print "DEBUG: len(data) is",len(remaining_data)
     while action_name != 'ActionEndFlag':
         print "   == Reading action",action_number,"== "
-        action_code = struct.unpack('<B',remaining_data[0])[0]
+        action_code = stream.read('uintle:8')
         if action_code >= 0x80:
             # If it's actually 63, we're using the long record header form instead.
-            action_length = struct.unpack('<H',remaining_data[1:3])[0]
-            remaining_data = remaining_data[3:]
+            action_length = stream.read('uintle:16')
         else:
             action_length = None
-            remaining_data = remaining_data[1:]
         action_name = get_action_type_name_from_number(action_code)
         print "  Action type:",action_code,action_name
         action_number += 1
         if action_length:
             print "  Action length:",action_length,"bytes"
             action_parser = get_action_parser_from_number(action_code)
-            action_parser(remaining_data[0:action_length])
-            remaining_data = remaining_data[action_length:]
-         
+            action_parser(stream.read('bits:%d' % (action_length*8)))         
         
 def define_bits_jpeg_2(data):
     character_id = struct.unpack('<H',data[0:2])[0]
@@ -86,20 +81,23 @@ def place_object_2(data):
     if flag_has_clip_actions:
         pass
 
-def define_sprite(data):
+def define_sprite(stream):
     #print '%r' % data
-    sprite_id = struct.unpack('<H',data[0:2])[0]
-    frame_count = struct.unpack('<H',data[2:4])[0]
+    sprite_id = stream.read('uintle:16')
+    frame_count = stream.read('uintle:16')
     print "Sprite ID:",sprite_id
     print "Frame count:",frame_count
     print "Sprite contains tags:"
-    remaining_data = data[4:]
     tag_name = ''
-    while len(remaining_data) > 0 and tag_name != 'End':
-        tag_name, tag_length = record_header(remaining_data)
-        print tag_name
-        remaining_data = remaining_data[tag_length:] # Trim off the tag data so far.
-
+    while stream.pos < stream.len and tag_name != 'End':
+        current_pos = stream.pos
+        tag_name, tag_length, is_long_header = record_header(stream)
+        print tag_name,"- length",tag_length,"bytes"
+        if is_long_header:
+            stream.pos = current_pos + (tag_length*8) + 48
+        else:
+            stream.pos = current_pos + (tag_length*8) + 16
+        
 def not_implemented(data):
     print "No parser for this tag yet."
     
