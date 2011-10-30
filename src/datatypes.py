@@ -3,7 +3,6 @@ Created on 20 Oct 2011
 
 @author: Bluebottle
 '''
-import struct
 
 def rgb_color_record(stream):
     # Data should be 3 bytes long: R, G and B values, each read as UI8.
@@ -12,18 +11,31 @@ def rgb_color_record(stream):
     b = stream.read('uintle:8')
     return r,g,b
 
-def matrix(data):
-    start_byte = struct.unpack('<B',data[0])[0]
-    has_scale = (1 << 7) & start_byte
+def matrix(stream):
+    #start_byte = struct.unpack('<B',data[0])[0]
+    has_scale = stream.read('bool') #(1 << 7) & start_byte
     if has_scale:
-        n_scale = (start_byte >> 2) & 0x1F
-    # Thoughts: could we have a UB-reader that took:
-    # - current data, active byte as data[0]
-    # - current bit to focus on (the last one processed is the previous one)
-    # and returned:
-    # - field as requested, in some appropriate form
-    # - current data, active byte as data[0]
-    # - current bit to focus on (as in input, the last one processed is the previous one)
+        n_scale = stream.read('uint:5') #(start_byte >> 2) & 0x1F
+        print "nScaleBits:",n_scale
+        scale_format = 'uint:%d' % n_scale
+        print "ScaleX:",stream.read(scale_format) # Not strictly a uint
+        print "ScaleY:",stream.read(scale_format) # they're actually 16.16 fixed-point
+    has_rotate = stream.read('bool')
+    if has_rotate:
+        n_rotate_bits = stream.read('uint:5')
+        print "nRotateBits:",n_rotate_bits
+        rotate_format = 'uint:%d' % n_rotate_bits
+        print "RotateSkew0:",stream.read(rotate_format) # as are these - so I'll have to sort
+        print "RotateSkew1:",stream.read(rotate_format) # the fixed-point stuff out later.
+    n_translate_bits = stream.read('uint:5')
+    print "nTranslateBits:",n_translate_bits
+    if n_translate_bits > 0:
+        translate_format = 'int:%d' % n_translate_bits
+        print "TranslateX:",stream.read(translate_format) # Basically I need to write my own thing
+        print "TranslateY:",stream.read(translate_format) # to turn however-many-bits into fixed-point.
+    return stream
+    
+    
 
 def record_header(stream):
     header = stream.read('uintle:16')

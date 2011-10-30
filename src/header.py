@@ -66,7 +66,7 @@ def get_tag_parser_from_number(number):
     tag_functions = {9:  tag_parsers.set_background_color,
                      12: tag_parsers.do_action,
                      #21: tag_parsers.define_bits_jpeg_2,
-                     #26: tag_parsers.place_object_2,
+                     26: tag_parsers.place_object_2,
                      39: tag_parsers.define_sprite
                      }
     if number in tag_functions:

@@ -5,7 +5,7 @@ Created on 15 Oct 2011
 '''
 import struct
 import action_parsers
-from datatypes import record_header, rgb_color_record, get_action_type_name_from_number
+from datatypes import record_header, rgb_color_record, matrix, get_action_type_name_from_number
 
 def set_background_color(stream):
     # Data should be an RGB color record.
@@ -15,7 +15,6 @@ def set_background_color(stream):
 def do_action(stream):
     action_number = 0
     action_name = ''
-    #print "DEBUG: len(data) is",len(remaining_data)
     while action_name != 'ActionEndFlag':
         print "   == Reading action",action_number,"== "
         action_code = stream.read('uintle:8')
@@ -52,24 +51,24 @@ def define_bits_jpeg_2(data):
         f.close()
         print "Wrote JPEG data to",filename
 
-def place_object_2(data):
-    flags = struct.unpack('<B',data[0])[0]
-    flag_has_clip_actions = (1 << 7) & flags
-    flag_has_clip_depth = (1 << 6) & flags
-    flag_has_name = (1 << 5) & flags
-    flag_has_ratio = (1 << 4) & flags
-    flag_has_color_transform = (1 << 3) & flags
-    flag_has_matrix = (1 << 2) & flags
-    flag_has_character = (1 << 1) & flags
-    flag_move = (1 << 0) & flags
-    depth = struct.unpack('<H',data[1:3])[0]
-    remaining_data = data[3:]
+def place_object_2(stream):
+    #flags = struct.unpack('<B',data[0])[0]
+    flag_has_clip_actions = stream.read('bool') #(1 << 7) & flags
+    flag_has_clip_depth = stream.read('bool') #(1 << 6) & flags
+    flag_has_name = stream.read('bool') #(1 << 5) & flags
+    flag_has_ratio = stream.read('bool') #(1 << 4) & flags
+    flag_has_color_transform = stream.read('bool') #(1 << 3) & flags
+    flag_has_matrix = stream.read('bool') #(1 << 2) & flags
+    flag_has_character = stream.read('bool') #(1 << 1) & flags
+    flag_move = stream.read('bool') #(1 << 0) & flags
+    depth = stream.read('uintle:16') #struct.unpack('<H',data[1:3])[0]
+    #remaining_data = data[3:]
     if flag_has_character:
-        character_id = struct.unpack('<H',data[0:2])[0]
+        character_id = stream.read('uintle:16') #struct.unpack('<H',data[0:2])[0]
         print "CharacterID:",character_id
-        remaining_data = remaining_data[2:]
+        #remaining_data = remaining_data[2:]
     if flag_has_matrix:
-        pass
+        stream = matrix(stream)
     if flag_has_color_transform:
         pass
     if flag_has_ratio:
