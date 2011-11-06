@@ -11,8 +11,28 @@ def rgb_color_record(stream):
     b = stream.read('uintle:8')
     return r,g,b
 
+def rgba_color_record(stream):
+    r = stream.read('uintle:8')
+    g = stream.read('uintle:8')
+    b = stream.read('uintle:8')
+    a = stream.read('uintle:8')
+    return r,g,b,a
+
+def rect(stream):
+    # Read the Nbits field - the first 5 bits - to find the size of the next ones.
+    nbits = stream.read('uint:5')
+    print "nBits:",nbits
+    nbits_format = 'int:%d' % nbits
+    print "Xmin:",stream.read(nbits_format)
+    print "Xmax:",stream.read(nbits_format)
+    print "Ymin:",stream.read(nbits_format)
+    print "Ymax:",stream.read(nbits_format)
+    # Wherever we are now, we need to skip ahead to the next byte boundary.
+    if stream.pos % 8 != 0:
+        stream.pos = stream.pos + (8 - (stream.pos % 8))
+    return stream
+
 def matrix(stream):
-    #start_byte = struct.unpack('<B',data[0])[0]
     has_scale = stream.read('bool') #(1 << 7) & start_byte
     if has_scale:
         n_scale = stream.read('uint:5') #(start_byte >> 2) & 0x1F
@@ -33,9 +53,56 @@ def matrix(stream):
         translate_format = 'int:%d' % n_translate_bits
         print "TranslateX:",stream.read(translate_format) # Basically I need to write my own thing
         print "TranslateY:",stream.read(translate_format) # to turn however-many-bits into fixed-point.
+    # BYTE ALIIIIIIGN
+    if stream.pos % 8 != 0:
+        stream.pos = stream.pos + (8 - (stream.pos % 8))
     return stream
-    
-    
+
+def cxform_with_alpha(stream):
+    has_add_terms = stream.read('bool')
+    has_mult_terms = stream.read('bool')
+    n_bits = stream.read('uint:5')
+    n_bits_format = 'int:%d' % n_bits
+    if has_mult_terms:
+        print "RedMultTerm:",stream.read(n_bits_format)
+        print "GreenMultTerm:",stream.read(n_bits_format)
+        print "BlueMultTerm:",stream.read(n_bits_format)
+        print "AlphaMultTerm:",stream.read(n_bits_format)
+    if has_add_terms:
+        print "RedAddTerm:",stream.read(n_bits_format)
+        print "GreenAddTerm:",stream.read(n_bits_format)
+        print "BlueAddTerm:",stream.read(n_bits_format)
+        print "AlphaAddTerm:",stream.read(n_bits_format)
+    return stream
+    # BYTE ALIGN THIS THING
+    # TODO: Turn this into its own function because it is that useful.
+    if stream.pos % 8 != 0:
+        stream.pos = stream.pos + (8 - (stream.pos % 8))
+    return stream
+
+def shape(stream):
+    print "NumFillBits:",stream.read('uint:4')
+    print "NumLineBits:",stream.read('uint:4')
+    # Now shaperecords.
+    record_type = ''
+    while record_type != 'EndShapeRecord':
+        type_flag = stream.read('uint:1')
+        if type_flag == 0:
+            if stream.peek('uint:5') == 0:
+                record_type = 'EndShapeRecord'
+            else:
+                record_type = 'StyleChangeRecord'
+        else:
+            straight_flag = stream.read('uint:1')
+            if straight_flag == 0:
+                record_type = 'CurvedEdgeRecord'
+            else:
+                record_type = 'StraightEdgeRecord'
+        print "RecordType:",record_type
+        # EndShapeRecord: type_flag = 0, next 5 bits all 0
+        # StyleChangeRecord: type_flag = 0, at least one of next 5 bits 1.
+        # StraightEdgeRecord: type_flag = 1, next bit = 1
+        # CurvedEdgeRecord: type_flat = 1, next bit = 0.
 
 def record_header(stream):
     header = stream.read('uintle:16')

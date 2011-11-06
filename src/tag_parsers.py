@@ -5,12 +5,23 @@ Created on 15 Oct 2011
 '''
 import struct
 import action_parsers
-from datatypes import record_header, rgb_color_record, matrix, get_action_type_name_from_number
+#from datatypes import record_header, rgb_color_record, matrix, get_action_type_name_from_number
+import datatypes
 
 def set_background_color(stream):
     # Data should be an RGB color record.
-    rgb = rgb_color_record(stream)
+    rgb = datatypes.rgb_color_record(stream)
     print "Background colour: RGB =",rgb
+
+def define_text(stream):
+    print "FontId:",stream.read('uintle:16')
+    starting_bytepos = stream.bytepos
+    n_glyphs = stream.peek('uintle:16') / 2
+    for glyph_number in range(n_glyphs):
+        stream.bytepos = starting_bytepos + (2 * glyph_number)
+        glyph_offset = stream.read('uintle:16')
+        stream.bytepos = starting_bytepos + glyph_offset
+        datatypes.shape(stream)
 
 def do_action(stream):
     action_number = 0
@@ -23,7 +34,7 @@ def do_action(stream):
             action_length = stream.read('uintle:16')
         else:
             action_length = None
-        action_name = get_action_type_name_from_number(action_code)
+        action_name = datatypes.get_action_type_name_from_number(action_code)
         print "  Action type:",action_code,action_name
         action_number += 1
         if action_length:
@@ -52,33 +63,100 @@ def define_bits_jpeg_2(data):
         print "Wrote JPEG data to",filename
 
 def place_object_2(stream):
-    #flags = struct.unpack('<B',data[0])[0]
-    flag_has_clip_actions = stream.read('bool') #(1 << 7) & flags
-    flag_has_clip_depth = stream.read('bool') #(1 << 6) & flags
-    flag_has_name = stream.read('bool') #(1 << 5) & flags
-    flag_has_ratio = stream.read('bool') #(1 << 4) & flags
-    flag_has_color_transform = stream.read('bool') #(1 << 3) & flags
-    flag_has_matrix = stream.read('bool') #(1 << 2) & flags
-    flag_has_character = stream.read('bool') #(1 << 1) & flags
-    flag_move = stream.read('bool') #(1 << 0) & flags
-    depth = stream.read('uintle:16') #struct.unpack('<H',data[1:3])[0]
-    #remaining_data = data[3:]
+    flag_has_clip_actions = stream.read('bool')
+    flag_has_clip_depth = stream.read('bool')
+    flag_has_name = stream.read('bool')
+    flag_has_ratio = stream.read('bool')
+    flag_has_color_transform = stream.read('bool')
+    flag_has_matrix = stream.read('bool')
+    flag_has_character = stream.read('bool')
+    flag_move = stream.read('bool')
+    depth = stream.read('uintle:16')
     if flag_has_character:
-        character_id = stream.read('uintle:16') #struct.unpack('<H',data[0:2])[0]
+        character_id = stream.read('uintle:16')
         print "CharacterID:",character_id
-        #remaining_data = remaining_data[2:]
     if flag_has_matrix:
-        stream = matrix(stream)
+        stream = datatypes.matrix(stream)
     if flag_has_color_transform:
-        pass
+        stream = datatypes.cxform_with_alpha(stream)
     if flag_has_ratio:
-        pass
+        print "Ratio:",stream.read('uintle:16')
     if flag_has_name:
-        pass
+        name = ''
+        while stream.peek('uintle:8') != 0:
+            name += stream.read('bytes:1')
+        print "Name:",name
     if flag_has_clip_depth:
-        pass
+        print "ClipDepth:",stream.read('uintle:16')
     if flag_has_clip_actions:
         pass
+
+def define_edit_text(stream):
+    character_id = stream.read('uintle:16')
+    print "Character ID",character_id
+    print "Bounds:"
+    stream = datatypes.rect(stream)
+    has_text = stream.read('bool')
+    print "HasText:",has_text
+    word_wrap = stream.read('bool')
+    print "WordWrap:",word_wrap
+    multiline = stream.read('bool')
+    print "Multiline:",multiline
+    password = stream.read('bool')
+    print "Password:",password
+    read_only = stream.read('bool')
+    print "ReadOnly:",read_only
+    has_text_color = stream.read('bool')
+    print "HasTextColor:",has_text_color
+    has_max_length = stream.read('bool')
+    print "HasMaxLength:",has_max_length
+    has_font = stream.read('bool')
+    print "HasFont:",has_font
+    has_font_class = stream.read('bool')
+    print "HasFontClass:",has_font_class
+    auto_size = stream.read('bool')
+    print "AutoSize:",auto_size
+    has_layout = stream.read('bool')
+    print "HasLayout:",has_layout
+    no_select = stream.read('bool')
+    print "NoSelect:",no_select
+    border = stream.read('bool')
+    print "Border:",border
+    was_static = stream.read('bool')
+    print "WasStatic:",was_static
+    html = stream.read('bool')
+    print "HTML:",html
+    use_outlines = stream.read('bool')
+    print "UseOutlines:",use_outlines
+    if has_font:
+        print "FontID:",stream.read('uintle:16')
+    if has_font_class:
+        font_class = ''
+        while stream.peek('uintle:8') != 0:
+            font_class += stream.read('bytes:1')
+        print "FontClass:",font_class
+    if has_font:
+        print "FontHeight:",stream.read('uintle:16')
+    if has_text_color:
+        rgba = datatypes.rgba_color_record(stream)
+        print "TextColor:",rgba
+    if has_max_length:
+        print "MaxLength:",stream.read('uintle:16')
+    if has_layout:
+        print "Align:",stream.read('uintle:8')
+        print "LeftMargin:",stream.read('uintle:16')
+        print "RightMargin:",stream.read('uintle:16')
+        print "Indent:",stream.read('uintle:16')
+        print "Leading:",stream.read('intle:16')
+    variable_name = ''
+    while stream.peek('uintle:8') != 0:
+        variable_name += stream.read('bytes:1')
+    print "VariableName:",variable_name
+    if has_text:
+        initial_text = ''
+        while stream.peek('uintle:8') != 0:
+            initial_text += stream.read('bytes:1')
+        print "InitialText:",initial_text
 
 def define_sprite(stream):
     #print '%r' % data
@@ -90,7 +168,7 @@ def define_sprite(stream):
     tag_name = ''
     while stream.pos < stream.len and tag_name != 'End':
         current_pos = stream.pos
-        tag_name, tag_length, is_long_header = record_header(stream)
+        tag_name, tag_length, is_long_header = datatypes.record_header(stream)
         print tag_name,"- length",tag_length,"bytes"
         if is_long_header:
             stream.pos = current_pos + (tag_length*8) + 48
