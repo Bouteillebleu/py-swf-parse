@@ -1,11 +1,13 @@
 # "D:/Coding/sim_original_test.swf"
 # First go - using http://the-labs.com/MacromediaFlash/SWF-Spec/SWFfileformat.html as guide.
+import sys, os
 import tag_parsers
 import datatypes
 from bitstring import ConstBitStream
 
 def main():
-    f = open("D:/Coding/sim_original_test.swf", "rb")
+    test_file = sys.argv[1]
+    f = open(os.path.join(os.getcwd(),test_file), "rb")
     s = ConstBitStream(f)
     try:
         print s.read('bytes:3')
@@ -13,7 +15,7 @@ def main():
         print "Size:",s.read('uintle:32'),"bytes"
         #print "oh god what is this:",struct.unpack('B',f.read(1))[0]
         s = datatypes.rect(s)
-        print "Frame rate:",s.read('uintle:8'),".",s.read('uintle:8')
+        print "Frame rate: %d.%d" % datatypes.fixed_8(s)
         print "Frame count:",s.read('uintle:16')
         read_tag_headers(s)
     finally:
@@ -49,10 +51,11 @@ def read_tag_headers(stream):
         print tag
         
 def get_tag_parser_from_number(number):
-    tag_functions = {9:  tag_parsers.set_background_color,
+    tag_functions = {#2:  tag_parsers.define_shape,
+                     9:  tag_parsers.set_background_color,
                      #10: tag_parsers.define_font,
                      12: tag_parsers.do_action,
-                     #21: tag_parsers.define_bits_jpeg_2,
+                     21: tag_parsers.define_bits_jpeg_2,
                      26: tag_parsers.place_object_2,
                      37: tag_parsers.define_edit_text,
                      39: tag_parsers.define_sprite
