@@ -61,7 +61,7 @@ def define_bits_jpeg_2(stream):
     if stream.peek(32) == '0xffd9ffd8': # Some SWF versions before 8 erroneously have an extra JPEG EOI and SOI pair before the actual SOI.
         stream.read(32) # In that case, we just throw away the extra 4 bytes.
     try:
-        f = open(os.path.join("..",filename),'wb')
+        f = open(os.path.join("../output",filename),'wb')
         while stream.pos < stream.len:
             f.write(struct.pack('b',stream.read('int:8')))
     finally:
