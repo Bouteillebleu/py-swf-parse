@@ -1,6 +1,6 @@
 # "D:/Coding/sim_original_test.swf"
 # First go - using http://the-labs.com/MacromediaFlash/SWF-Spec/SWFfileformat.html as guide.
-import sys, os
+import sys, os, zlib
 import tag_parsers
 import datatypes
 from bitstring import ConstBitStream
@@ -10,14 +10,26 @@ def main():
     f = open(os.path.join(os.getcwd(),test_file), "rb")
     s = ConstBitStream(f)
     try:
-        print s.read('bytes:3')
-        print "Version:",s.read('uintle:8')
-        print "Size:",s.read('uintle:32'),"bytes"
-        #print "oh god what is this:",struct.unpack('B',f.read(1))[0]
-        s = datatypes.rect(s)
-        print "Frame rate: %d.%d" % datatypes.fixed_8(s)
-        print "Frame count:",s.read('uintle:16')
-        read_tag_headers(s)
+        file_type = s.read('bytes:3')
+        if file_type == "FWS":
+            print "Standard SWF"
+            print "Version:",s.read('uintle:8')
+            print "Size:",s.read('uintle:32'),"bytes"
+            s = datatypes.rect(s)
+            print "Frame rate: %d.%d" % datatypes.fixed_8(s)
+            print "Frame count:",s.read('uintle:16')
+            read_tag_headers(s)
+        elif file_type == "CWS":
+            print "Compressed SWF"
+            print "Version:",s.read('uintle:8')
+            print "Uncompressed size:",s.read('uintle:32'),"bytes"
+            to_decompress = s[64:].tobytes()
+            s = ConstBitStream(bytes=zlib.decompress(to_decompress))
+            s = datatypes.rect(s)
+            print "Frame rate: %d.%d" % datatypes.fixed_8(s)
+            print "Frame count:",s.read('uintle:16')
+            read_tag_headers(s)
+            #print "[Cannot currently parse]"
     finally:
         f.close()
 
