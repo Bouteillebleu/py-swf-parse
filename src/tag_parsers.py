@@ -3,11 +3,23 @@ Created on 15 Oct 2011
 
 @author: Bluebottle
 '''
+import os
 import struct
 import action_parsers
-#from datatypes import record_header, rgb_color_record, matrix, get_action_type_name_from_number
 import datatypes
 
+def define_shape(stream):
+    print "ShapeId:",stream.read('uintle:16')
+    print "ShapeBounds:"
+    stream = datatypes.rect(stream)
+    datatypes.shape_with_style(stream,"DefineShape")
+
+def define_shape_2(stream):
+    print "ShapeId:",stream.read('uintle:16')
+    print "ShapeBounds:"
+    stream = datatypes.rect(stream)
+    #datatypes.shape_with_style(stream,"DefineShape2")
+    
 def set_background_color(stream):
     # Data should be an RGB color record.
     rgb = datatypes.rgb_color_record(stream)
@@ -21,7 +33,7 @@ def define_text(stream):
         stream.bytepos = starting_bytepos + (2 * glyph_number)
         glyph_offset = stream.read('uintle:16')
         stream.bytepos = starting_bytepos + glyph_offset
-        datatypes.shape(stream)
+        datatypes.shape(stream,"DefineText")
 
 def do_action(stream):
     action_number = 0
@@ -42,22 +54,16 @@ def do_action(stream):
             action_parser = get_action_parser_from_number(action_code)
             action_parser(stream.read('bits:%d' % (action_length*8)))         
         
-def define_bits_jpeg_2(data):
-    character_id = struct.unpack('<H',data[0:2])[0]
+def define_bits_jpeg_2(stream):
+    character_id = stream.read('uintle:16')
     print "Character ID:",character_id
     filename = "%d.jpeg" % character_id
+    if stream.peek(32) == '0xffd9ffd8': # Some SWF versions before 8 erroneously have an extra JPEG EOI and SOI pair before the actual SOI.
+        stream.read(32) # In that case, we just throw away the extra 4 bytes.
     try:
-        f = open(filename,'wb')
-        remaining_data = data[2:]
-        while len(remaining_data) > 0:
-            #print repr(remaining_data[0:4])
-            #chunk = struct.pack('<c',remaining_data[0])
-            f.write(remaining_data[0])
-            remaining_data = remaining_data[1:]
-        #else:
-        #    format_string = "<" + ("c" * len(remaining_data))
-        #    chunk = struct.pack(format_string,*(b for b in remaining_data))
-        #    f.write(chunk)
+        f = open(os.path.join("..",filename),'wb')
+        while stream.pos < stream.len:
+            f.write(struct.pack('b',stream.read('int:8')))
     finally:
         f.close()
         print "Wrote JPEG data to",filename
@@ -189,3 +195,4 @@ def get_action_parser_from_number(number):
         return action_functions[number]
     else:
         return action_parsers.not_implemented
+
