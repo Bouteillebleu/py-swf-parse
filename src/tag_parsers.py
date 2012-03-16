@@ -20,6 +20,13 @@ def define_shape_2(stream):
     stream = datatypes.rect(stream)
     #datatypes.shape_with_style(stream,"DefineShape2")
     
+def remove_object(stream):
+    print "CharacterId:",stream.read('uintle:16')
+    print "Depth:",stream.read('uintle:16')
+
+def remove_object_2(stream):
+    print "Depth:",stream.read('uintle:16')
+
 def set_background_color(stream):
     # Data should be an RGB color record.
     rgb = datatypes.rgb_color_record(stream)
@@ -68,6 +75,14 @@ def define_bits_jpeg_2(stream):
         f.close()
         print "Wrote JPEG data to",filename
 
+def place_object(stream):
+    character_id = stream.read('uintle:16')
+    print "CharacterID:",character_id
+    depth = stream.read('uintle:16')
+    print "Depth:",depth
+    stream = datatypes.matrix(stream)
+    stream = datatypes.cxform(stream)
+
 def place_object_2(stream):
     flag_has_clip_actions = stream.read('bool')
     flag_has_clip_depth = stream.read('bool')
@@ -91,6 +106,7 @@ def place_object_2(stream):
         name = ''
         while stream.peek('uintle:8') != 0:
             name += stream.read('bytes:1')
+        stream.bytepos += 1 # Skip over the string's terminating 0-byte.
         print "Name:",name
     if flag_has_clip_depth:
         print "ClipDepth:",stream.read('uintle:16')
@@ -181,6 +197,20 @@ def define_sprite(stream):
         else:
             stream.pos = current_pos + (tag_length*8) + 16
         
+def frame_label(stream):
+    name = ''
+    while stream.peek('uintle:8') != 0:
+        name += stream.read('bytes:1')
+    print "Name:",name
+
+def script_limits(stream):
+    print "MaxRecursionDepth:",stream.read('uintle:16')
+    print "ScriptTimeoutSeconds:",stream.read('uintle:16')
+
+def set_tab_index(stream):
+    print "Depth:",stream.read('uintle:16')
+    print "TabIndex:",stream.read('uintle:16')
+
 def not_implemented(data):
     print "No parser for this tag yet."
     

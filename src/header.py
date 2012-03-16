@@ -64,13 +64,19 @@ def read_tag_headers(stream):
         
 def get_tag_parser_from_number(number):
     tag_functions = {#2:  tag_parsers.define_shape,
+                     4:  tag_parsers.place_object,
+                     5:  tag_parsers.remove_object,
                      9:  tag_parsers.set_background_color,
                      #10: tag_parsers.define_font,
                      12: tag_parsers.do_action,
                      21: tag_parsers.define_bits_jpeg_2,
                      26: tag_parsers.place_object_2,
+                     28: tag_parsers.remove_object_2,
                      37: tag_parsers.define_edit_text,
-                     39: tag_parsers.define_sprite
+                     39: tag_parsers.define_sprite,
+                     43: tag_parsers.frame_label,
+                     65: tag_parsers.script_limits,
+                     66: tag_parsers.set_tab_index,
                      }
     if number in tag_functions:
         return tag_functions[number]
