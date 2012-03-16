@@ -68,6 +68,26 @@ def matrix(stream):
         stream.pos = stream.pos + (8 - (stream.pos % 8))
     return stream
 
+def cxform(stream):
+    has_add_terms = stream.read('bool')
+    has_mult_terms = stream.read('bool')
+    n_bits = stream.read('uint:4')
+    n_bits_format = 'int:%d' % n_bits
+    if has_mult_terms:
+        print "RedMultTerm:",stream.read(n_bits_format)
+        print "GreenMultTerm:",stream.read(n_bits_format)
+        print "BlueMultTerm:",stream.read(n_bits_format)
+    if has_add_terms:
+        print "RedAddTerm:",stream.read(n_bits_format)
+        print "GreenAddTerm:",stream.read(n_bits_format)
+        print "BlueAddTerm:",stream.read(n_bits_format)
+    return stream
+    # BYTE ALIGN THIS THING
+    # TODO: Turn this into its own function because it is that useful.
+    if stream.pos % 8 != 0:
+        stream.pos = stream.pos + (8 - (stream.pos % 8))
+    return stream
+
 def cxform_with_alpha(stream):
     has_add_terms = stream.read('bool')
     has_mult_terms = stream.read('bool')
