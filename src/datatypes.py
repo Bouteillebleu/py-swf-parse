@@ -28,6 +28,13 @@ def fixed(stream):
     high = stream.read('uintle:16')
     return high,low
 
+def string(stream):
+    new_string = ''
+    while stream.peek('uintle:8') != 0:
+        new_string += stream.read('bytes:1')
+    stream.bytepos += 1 # Ignore the final 0 in the string.
+    return stream, new_string
+
 def rect(stream):
     # Read the Nbits field - the first 5 bits - to find the size of the next ones.
     nbits = stream.read('uint:5')
@@ -172,7 +179,7 @@ def fill_style_array(stream,calling_tag):
     if fill_style_count == 0xff:
         fill_style_count = stream.read('uintle:16')
         print "FillStyleCountExtended:",fill_style_count
-    # TODO: Add FillStyles!
+    # And the individual FillStyles!
     for n in range(0,fill_style_count):
         print "FillStyle[%d]" % (n+1)
         fill_style_type = stream.read("uintle:8")
@@ -336,9 +343,9 @@ def get_tag_type_name_from_number(number):
             60: "DefineVideoStream",
             61: "VideoFrame",
             62: "DefineFontInfo2",
-            64: "EnableDebugger2"}
-    # 65: "ScriptLimits",
-    # 66: "SetTabIndex",
+            64: "EnableDebugger2",
+            65: "ScriptLimits",
+            66: "SetTabIndex",
     # 69: "FileAttributes",
     # 70: "PlaceObject3",
     # 71: "ImportAssets2",
@@ -361,6 +368,7 @@ def get_tag_type_name_from_number(number):
     # 74 is CSMTextSettings, also v8 or later.
     # 75 is DefineFont3, also also v8 or later. Weird.
     # Worth checking whether their descriptions in the v10 spec match the fields here.
+    }
     if number in tags:
         return tags[number]
     else:

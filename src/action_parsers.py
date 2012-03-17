@@ -9,49 +9,34 @@ def goto_frame(stream):
     print "Go to frame:",frame
 
 def get_url(stream):
-    url_string = ''
-    while stream.peek('uintle:8') != 0:
-        url_string += stream.read('bytes:1')
+    stream, url_string = datatypes.string(stream)
     print "URLString:",url_string
-    stream.bytepos += 1
-    target_string = ''
-    while stream.peek('uintle:8') != 0:
-        target_string += stream.read('bytes:1')
+    stream, target_string = datatypes.string(stream)
     print "TargetString:",target_string
-    stream.bytepos += 1
 
 def constant_pool(stream):
     constant_count = stream.read('uintle:16')
     print "Total constants:",constant_count
     constants_so_far = 0
     while stream.pos < stream.len and constants_so_far < constant_count:
-        string_so_far = ""
-        while stream.peek('uintle:8') != 0:
-            string_so_far += stream.read('bytes:1')
+        stream, string_so_far = datatypes.string(stream)
         print "Constant",constants_so_far,"is:",string_so_far
         constants_so_far += 1
-        stream.bytepos += 1  #ignore the 0 at end of string.
 
 def wait_for_frame(stream):
     print "Frame",stream.read('uintle:16')
     print "SkipCount",stream.read('uintle:8')
 
 def set_target(stream):
-    target_name = ''
-    while stream.peek('uintle:8') != 0:
-        target_name += stream.read('bytes:1')
+    stream, target_name = datatypes.string(stream)
     print "TargetName:",target_name
-    stream.bytepos += 1
 
 def wait_for_frame_2(stream):
     print "SkipCount",stream.read('uintle:8')
 
 def goto_label(stream):
-    label = ''
-    while stream.peek('uintle:8') != 0:
-        label += stream.read('bytes:1')
+    stream, label = datatypes.string(stream)
     print "Label:",label
-    stream.bytepos += 1
 
 def with(stream):
     print "Size:",stream.read('uintle:16')
@@ -59,11 +44,8 @@ def with(stream):
 def push(stream):
     data_type = stream.read('uintle:8')
     if data_type == 0:
-        string_so_far = ""
-        while stream.peek('uintle:8') != 0:
-            string_so_far += stream.read('bytes:1')
+        stream, string_so_far = datatypes.string(stream)
         print "Pushed string:",string_so_far
-        stream.bytepos += 1 #ignore the 0 at end of string.
     elif data_type == 1:
         float_pushed = stream.read('floatle:32')
         print "Pushed float:",float_pushed
@@ -96,20 +78,57 @@ def get_url_2(stream):
     print "LoadVariablesFlag:",stream.read('bool')
 
 def define_function(stream):
-    function_name = ''
-    while stream.peek('uintle:8') != 0:
-        function_name += stream.read('bytes:1')
+    stream, function_name = datatypes.string(stream)
     print "FunctionName:",function_name
-    stream.bytepos += 1
     num_params = stream.read('uintle:16')
     for i in range(num_params):
-        current_param = ''
-        while stream.peek('uintle:8') != 0:
-            current_param += stream.read('bytes:1')
+        stream, current_param = datatypes.string(stream)
         print "Param",i+1,":",current_param
-        stream.bytepos += 1
     print "CodeSize:",stream.read('uintle:16')
     # TODO: And then there's something involving the remaining code.
+
+def define_function_2(stream):
+    stream, function_name = datatypes.string(stream)
+    print "FunctionName:",function_name
+    num_params = stream.read('uintle:16')
+    print "NumParams:",num_params
+    print "RegisterCount:",stream.read('uintle:8')
+    print "PreloadParentFlag:",stream.read('bool')
+    print "PreloadRootFlag:",stream.read('bool')
+    print "SuppressSuperFlag:",stream.read('bool')
+    print "PreloadSuperFlag:",stream.read('bool')
+    print "SuppressArgumentsFlag:",stream.read('bool')
+    print "PreloadArgumentsFlag:",stream.read('bool')
+    print "SuppressThisFlag:",stream.read('bool')
+    print "PreloadThisFlag:",stream.read('bool')
+    stream.pos += 7
+    print "PreloadGlobalFlag:",stream.read('bool')
+    # TIME TO BYTE ALIGN
+    if stream.pos % 8 != 0:
+        stream.pos = stream.pos + (8 - (stream.pos % 8))
+    for i in range(num_params):
+        print "For parameter",i+1
+        register = stream.read('uintle:8')
+        print "Using register:",register
+        stream, param_name = datatypes.string(stream)
+        print "ParamName:",param_name
+    # TODO: And then there's something involving the remaining code.
+
+def try(stream):
+    stream.pos += 5
+    catch_in_register_flag = stream.read('bool')
+    print "CatchInRegisterFlag:",catch_in_register_flag
+    print "FinallyBlockFlag:",stream.read('bool')
+    print "CatchBlockFlag:",stream.read('bool')
+    print "TrySize:",stream.read('uintle:16')
+    print "CatchSize:",stream.read('uintle:16')
+    print "FinallySize:",stream.read('uintle:16')
+    if catch_in_register_flag:
+        print "CatchRegister:",stream.read('uintle:8')
+    else:
+        stream, catch_name = datatypes.string(stream)
+        print "CatchName:",catch_name
+    # TODO: And then there's the TryBody, CatchBody and FinallyBody.
 
 def if(stream):
     print "BranchOffset:",stream.read('intle:16')

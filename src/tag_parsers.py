@@ -123,10 +123,7 @@ def place_object_2(stream):
     if flag_has_ratio:
         print "Ratio:",stream.read('uintle:16')
     if flag_has_name:
-        name = ''
-        while stream.peek('uintle:8') != 0:
-            name += stream.read('bytes:1')
-        stream.bytepos += 1 # Skip over the string's terminating 0-byte.
+        stream, name = datatypes.string(stream)
         print "Name:",name
     if flag_has_clip_depth:
         print "ClipDepth:",stream.read('uintle:16')
@@ -173,9 +170,7 @@ def define_edit_text(stream):
     if has_font:
         print "FontID:",stream.read('uintle:16')
     if has_font_class:
-        font_class = ''
-        while stream.peek('uintle:8') != 0:
-            font_class += stream.read('bytes:1')
+        stream, font_class = datatypes.string(stream)
         print "FontClass:",font_class
     if has_font:
         print "FontHeight:",stream.read('uintle:16')
@@ -190,14 +185,10 @@ def define_edit_text(stream):
         print "RightMargin:",stream.read('uintle:16')
         print "Indent:",stream.read('uintle:16')
         print "Leading:",stream.read('intle:16')
-    variable_name = ''
-    while stream.peek('uintle:8') != 0:
-        variable_name += stream.read('bytes:1')
+    stream, variable_name = datatypes.string(stream)
     print "VariableName:",variable_name
     if has_text:
-        initial_text = ''
-        while stream.peek('uintle:8') != 0:
-            initial_text += stream.read('bytes:1')
+        stream, initial_text = datatypes.string(stream)
         print "InitialText:",initial_text
 
 def define_sprite(stream):
@@ -218,9 +209,7 @@ def define_sprite(stream):
             stream.pos = current_pos + (tag_length*8) + 16
         
 def frame_label(stream):
-    name = ''
-    while stream.peek('uintle:8') != 0:
-        name += stream.read('bytes:1')
+    stream, name = datatypes.string(stream)
     print "Name:",name
 
 def script_limits(stream):
@@ -244,6 +233,8 @@ def get_action_parser_from_number(number):
                         0x8b: action_parsers.set_target,
                         0x8c: action_parsers.goto_label,
                         0x8d: action_parsers.wait_for_frame_2,
+                        0x8e: action_parsers.define_function_2,
+                        0x8f: action_parsers.try,
                         0x94: action_parsers.with,
                         0x96: action_parsers.push,
                         0x99: action_parsers.jump,
