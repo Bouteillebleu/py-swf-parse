@@ -123,7 +123,7 @@ def gradient(stream,calling_tag):
     num_gradients = stream.read('uint:4')
     print "NumGradients:",num_gradients
     for n in range(0,num_gradients):
-        print "GradientRecords[%d]" % n+1
+        print "GradientRecords[%d]" % (n+1)
         print "Ratio:",stream.read('uintle:8')
         print "Color:"
         if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
@@ -182,27 +182,30 @@ def fill_style_array(stream,calling_tag):
     # And the individual FillStyles!
     for n in range(0,fill_style_count):
         print "FillStyle[%d]" % (n+1)
-        fill_style_type = stream.read("uintle:8")
-        print "FillStyleType",fill_style_type
-        if fill_style_type == 0x00:
-            print "Color:"
-            if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
-                print "(%d,%d,%d)" % rgb_color_record(stream)
-            else:
-                print "(%d,%d,%d,%d)" % rgba_color_record(stream)
-        if fill_style_type in (0x10,0x12,0x13):
-            print "GradientMatrix:"
-            stream = matrix(stream)
-            print "Gradient:"
-            if fill_style_type == 0x13:
-                stream = focal_gradient(stream,calling_tag)
-            else:
-                stream = gradient(stream,calling_tag)
-        if fill_style_type in (0x40,0x41,0x42,0x43):
-            print "BitmapId:",stream.read("uintle:16")
-            print "BitmapMatrix:"
-            stream = matrix(stream)
+        fill_style(stream,calling_tag)
     return stream
+
+def fill_style(stream,calling_tag):
+    fill_style_type = stream.read("uintle:8")
+    print "FillStyleType",fill_style_type
+    if fill_style_type == 0x00:
+        print "Color:"
+        if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
+            print "(%d,%d,%d)" % rgb_color_record(stream)
+        else:
+            print "(%d,%d,%d,%d)" % rgba_color_record(stream)
+    if fill_style_type in (0x10,0x12,0x13):
+        print "GradientMatrix:"
+        stream = matrix(stream)
+        print "Gradient:"
+        if fill_style_type == 0x13:
+            stream = focal_gradient(stream,calling_tag)
+        else:
+            stream = gradient(stream,calling_tag)
+    if fill_style_type in (0x40,0x41,0x42,0x43):
+        print "BitmapId:",stream.read("uintle:16")
+        print "BitmapMatrix:"
+        stream = matrix(stream)
 
 def line_style_array(stream,calling_tag):
     # Line style array!
@@ -212,13 +215,36 @@ def line_style_array(stream,calling_tag):
         line_style_count = stream.read('uintle:16')
         print "LineStyleCountExtended:",line_style_count
     for n in range(0,line_style_count):
-        print "LineStyle[%d]" % (n+1)
-        print "Width:",stream.read('uintle:16')
-        print "Color:"
-        if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
-            print "(%d,%d,%d)" % rgb_color_record(stream)
-        else:
-            print "(%d,%d,%d,%d)" % rgba_color_record(stream)
+        if calling_tag in ("DefineShape","DefineShape2","DefineShape3"):
+            # LineStyle!
+            print "LineStyle[%d]" % (n+1)
+            print "Width:",stream.read('uintle:16')
+            print "Color:"
+            if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
+                print "(%d,%d,%d)" % rgb_color_record(stream)
+            else:
+                print "(%d,%d,%d,%d)" % rgba_color_record(stream)
+        elif calling_tag == "DefineShape4":
+            #LineStyle2!
+            print "LineStyle2[%d]" % (n+1)
+            print "StartCapStyle:",stream.read('uintle:2')
+            join_style = stream.read('uintle:2')
+            print "JoinStyle:",join_style
+            has_fill_flag = stream.read('bool')
+            print "HasFillFlag:",has_fill_flag
+            print "NoHScaleFlag:",stream.read('bool')
+            print "NoVScaleFlag:",stream.read('bool')
+            print "PixelHintingFlag:",stream.read('bool')
+            stream.pos += 5
+            print "NoClose:",stream.read('bool')
+            print "EndCapStyle:",stream.read('uintle:2')
+            if join_style == 2:
+                miter_limit_factor = datatype.fixed_8(stream)
+            if has_fill_flag:
+                fill_style(stream,calling_tag)
+            else:
+                print "Color:"
+                print "(%d,%d,%d,%d)" % rgba_color_record(stream)
     return stream
 
 def style_change_record(stream,calling_tag,num_fill_bits,num_line_bits):
