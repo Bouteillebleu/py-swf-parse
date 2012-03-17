@@ -75,6 +75,7 @@ def get_tag_parser_from_number(number):
                      37: tag_parsers.define_edit_text,
                      39: tag_parsers.define_sprite,
                      43: tag_parsers.frame_label,
+                     59: tag_parsers.do_init_action,
                      65: tag_parsers.script_limits,
                      66: tag_parsers.set_tab_index,
                      }

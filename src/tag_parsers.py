@@ -60,6 +60,26 @@ def do_action(stream):
             print "  Action length:",action_length,"bytes"
             action_parser = get_action_parser_from_number(action_code)
             action_parser(stream.read('bits:%d' % (action_length*8)))         
+
+def do_init_action(stream):
+    print "SpriteID:",stream.read('uintle:16')
+    action_number = 0
+    action_name = ''
+    while action_name != 'ActionEndFlag':
+        print "   == Reading action",action_number,"== "
+        action_code = stream.read('uintle:8')
+        if action_code >= 0x80:
+            # If it's actually 63, we're using the long record header form instead.
+            action_length = stream.read('uintle:16')
+        else:
+            action_length = None
+        action_name = datatypes.get_action_type_name_from_number(action_code)
+        print "  Action type:",action_code,action_name
+        action_number += 1
+        if action_length:
+            print "  Action length:",action_length,"bytes"
+            action_parser = get_action_parser_from_number(action_code)
+            action_parser(stream.read('bits:%d' % (action_length*8)))         
         
 def define_bits_jpeg_2(stream):
     character_id = stream.read('uintle:16')
@@ -218,8 +238,19 @@ def not_implemented(data):
 
 def get_action_parser_from_number(number):
     action_functions = {0x81: action_parsers.goto_frame,
+                        0x83: action_parsers.get_url,
                         0x88: action_parsers.constant_pool,
+                        0x8a: action_parsers.wait_for_frame,
+                        0x8b: action_parsers.set_target,
+                        0x8c: action_parsers.goto_label,
+                        0x8d: action_parsers.wait_for_frame_2,
+                        0x94: action_parsers.with,
                         0x96: action_parsers.push,
+                        0x99: action_parsers.jump,
+                        0x9a: action_parsers.get_url_2,
+                        0x9b: action_parsers.define_function,
+                        0x9d: action_parsers.if,
+                        0x9f: action_parsers.goto_frame_2,
                         }
     if number in action_functions:
         return action_functions[number]
