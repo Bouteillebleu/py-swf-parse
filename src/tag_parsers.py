@@ -18,7 +18,13 @@ def define_shape_2(stream):
     print "ShapeId:",stream.read('uintle:16')
     print "ShapeBounds:"
     stream = datatypes.rect(stream)
-    #datatypes.shape_with_style(stream,"DefineShape2")
+    datatypes.shape_with_style(stream,"DefineShape2")
+
+def define_shape_3(stream):
+    print "ShapeId:",stream.read('uintle:16')
+    print "ShapeBounds:"
+    stream = datatypes.rect(stream)
+    datatypes.shape_with_style(stream,"DefineShape3")
     
 def remove_object(stream):
     print "CharacterId:",stream.read('uintle:16')
@@ -234,13 +240,13 @@ def get_action_parser_from_number(number):
                         0x8c: action_parsers.goto_label,
                         0x8d: action_parsers.wait_for_frame_2,
                         0x8e: action_parsers.define_function_2,
-                        0x8f: action_parsers.try,
-                        0x94: action_parsers.with,
+                        0x8f: action_parsers.action_try,
+                        0x94: action_parsers.action_with,
                         0x96: action_parsers.push,
                         0x99: action_parsers.jump,
                         0x9a: action_parsers.get_url_2,
                         0x9b: action_parsers.define_function,
-                        0x9d: action_parsers.if,
+                        0x9d: action_parsers.action_if,
                         0x9f: action_parsers.goto_frame_2,
                         }
     if number in action_functions:

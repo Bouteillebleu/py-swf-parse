@@ -38,7 +38,7 @@ def goto_label(stream):
     stream, label = datatypes.string(stream)
     print "Label:",label
 
-def with(stream):
+def action_with(stream):
     print "Size:",stream.read('uintle:16')
 
 def push(stream):
@@ -114,7 +114,7 @@ def define_function_2(stream):
         print "ParamName:",param_name
     # TODO: And then there's something involving the remaining code.
 
-def try(stream):
+def action_try(stream):
     stream.pos += 5
     catch_in_register_flag = stream.read('bool')
     print "CatchInRegisterFlag:",catch_in_register_flag
@@ -130,7 +130,7 @@ def try(stream):
         print "CatchName:",catch_name
     # TODO: And then there's the TryBody, CatchBody and FinallyBody.
 
-def if(stream):
+def action_if(stream):
     print "BranchOffset:",stream.read('intle:16')
 
 def goto_frame_2(stream):
