@@ -26,6 +26,18 @@ def define_shape_3(stream):
     stream = datatypes.rect(stream)
     datatypes.shape_with_style(stream,"DefineShape3")
     
+def define_shape_4(stream):
+    print "ShapeId:",stream.read('uintle:16')
+    print "ShapeBounds:"
+    stream = datatypes.rect(stream)
+    print "EdgeBounds:"
+    stream = datatypes.rect(stream)
+    stream.pos += 5
+    print "UsesFillWindingRule:",stream.read('bool')
+    print "UsesNonScalingStrokes:",stream.read('bool')
+    print "UsesScalingStrokes:",stream.read('bool')
+    datatypes.shape_with_style(stream,"DefineShape4")
+    
 def remove_object(stream):
     print "CharacterId:",stream.read('uintle:16')
     print "Depth:",stream.read('uintle:16')
