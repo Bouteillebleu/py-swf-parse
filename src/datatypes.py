@@ -44,10 +44,7 @@ def rect(stream):
     print "Xmax:",stream.read(nbits_format)
     print "Ymin:",stream.read(nbits_format)
     print "Ymax:",stream.read(nbits_format)
-    # Wherever we are now, we need to skip ahead to the next byte boundary.
-    if stream.pos % 8 != 0:
-        stream.pos = stream.pos + (8 - (stream.pos % 8))
-    return stream
+    stream.bytealign()
 
 def matrix(stream):
     has_scale = stream.read('bool') #(1 << 7) & start_byte
@@ -70,9 +67,7 @@ def matrix(stream):
         translate_format = 'int:%d' % n_translate_bits
         print "TranslateX:",stream.read(translate_format) # Basically I need to write my own thing
         print "TranslateY:",stream.read(translate_format) # to turn however-many-bits into fixed-point.
-    # BYTE ALIIIIIIGN
-    if stream.pos % 8 != 0:
-        stream.pos = stream.pos + (8 - (stream.pos % 8))
+    stream.bytealign()
     return stream
 
 def cxform(stream):
@@ -88,11 +83,7 @@ def cxform(stream):
         print "RedAddTerm:",stream.read(n_bits_format)
         print "GreenAddTerm:",stream.read(n_bits_format)
         print "BlueAddTerm:",stream.read(n_bits_format)
-    return stream
-    # BYTE ALIGN THIS THING
-    # TODO: Turn this into its own function because it is that useful.
-    if stream.pos % 8 != 0:
-        stream.pos = stream.pos + (8 - (stream.pos % 8))
+    stream.bytealign()
     return stream
 
 def cxform_with_alpha(stream):
@@ -110,11 +101,7 @@ def cxform_with_alpha(stream):
         print "GreenAddTerm:",stream.read(n_bits_format)
         print "BlueAddTerm:",stream.read(n_bits_format)
         print "AlphaAddTerm:",stream.read(n_bits_format)
-    return stream
-    # BYTE ALIGN THIS THING
-    # TODO: Turn this into its own function because it is that useful.
-    if stream.pos % 8 != 0:
-        stream.pos = stream.pos + (8 - (stream.pos % 8))
+    stream.bytealign()
     return stream
 
 def gradient(stream,calling_tag):
@@ -274,9 +261,7 @@ def style_change_record(stream,calling_tag,num_fill_bits,num_line_bits):
     line_bits_format = 'uint:%d' % num_line_bits
     if state_line_style and num_line_bits > 0:
         print "LineStyle:",stream.read(line_bits_format)
-    # TIME TO BYTE ALIGN
-    if stream.pos % 8 != 0:
-        stream.pos = stream.pos + (8 - (stream.pos % 8))
+    stream.bytealign()
     if state_new_styles: # and calling_tag != "DefineShape":
         stream = fill_style_array(stream,calling_tag)
         stream = line_style_array(stream,calling_tag)

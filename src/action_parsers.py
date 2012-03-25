@@ -103,9 +103,7 @@ def define_function_2(stream):
     print "PreloadThisFlag:",stream.read('bool')
     stream.pos += 7
     print "PreloadGlobalFlag:",stream.read('bool')
-    # TIME TO BYTE ALIGN
-    if stream.pos % 8 != 0:
-        stream.pos = stream.pos + (8 - (stream.pos % 8))
+    stream.bytealign()
     for i in range(num_params):
         print "For parameter",i+1
         register = stream.read('uintle:8')
