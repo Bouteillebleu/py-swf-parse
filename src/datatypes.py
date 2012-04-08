@@ -114,11 +114,8 @@ class CxformWithAlpha(object):
             s += "\nRedAddTerm: {0}\nGreenAddTerm: {1}\nBlueAddTerm: {2}\nAlphaAddTerm: {3}".format(self.red_add_term,self.green_add_term,self.blue_add_term,self.alpha_add_term)
         return s
 
-def Matrix(object):
+class Matrix(object):
     def __init__(self,stream):
-        # Original comments say "they're actually 16.16 fixed-point"
-        # for the scale/rotate/translate factors, but this doesn't seem 
-        # to make any sense. Will look into this later on.
         self.has_scale = stream.read('bool')
         if self.has_scale:
             n_scale = stream.read('uint:5')
@@ -137,6 +134,9 @@ def Matrix(object):
             self.translate_x = stream.read(translate_format)
             self.translate_y = stream.read(translate_format)
         stream.bytealign()
+        # Original comments say "they're actually 16.16 fixed-point"
+        # for the scale/rotate/translate factors, but this doesn't seem 
+        # to make any sense. Will look into this later on.
     
     def __str__(self):
         s = "\nHasScale: {0}".format(self.has_scale)
@@ -145,11 +145,11 @@ def Matrix(object):
         s += "\nHasRotate: {0}".format(self.has_rotate)
         if self.has_rotate:
             s += "\nRotateSkew0: {0}\nRotateSkew1: {1}".format(self.rotate_skew_0,self.rotate_skew_1)
-        if self.translate_x:
+        if hasattr(self,"translate_x"):
             s += "\nTranslateX: {0}\nTranslateY: {1}".format(self.translate_x,self.translate_y)
         return s
 
-def ClipActions(object):
+class ClipActions(object):
     def __init__(self,stream,swf_version):
         stream.pos += 16
         self.all_event_flags = ClipEventFlags(stream,swf_version)
@@ -162,19 +162,29 @@ def ClipActions(object):
             self.clip_action_records.append(ClipActionRecord(stream,
                                                              swf_version))
         self.pos += flag_size
+    
+    def __str__(self):
+        return "[no str method yet, working on it]"
 
-def ClipActionRecord(object):
+class ClipActionRecord(object):
     def __init__(self,stream,swf_version):
         self.event_flags = ClipEventFlags(stream,swf_version)
         self.action_record_size = stream.read('uintle:32')
         initial_bytepos = stream.bytepos
-        if self.event_flags.clip_event_key_press is not None:
+        if hasattr(self.event_flags,"clip_event_key_press") and self.event_flags.clip_event_key_press == True:
             self.key_code = stream.read('uintle:8')
         self.actions = []
-        #while stream.bytepos < initial_bytepos + self.action_record_size:
-        #    self.actions.append(ActionRecord(
+        while stream.bytepos < initial_bytepos + self.action_record_size:
+            action_code = stream.read('uintle:8')
+            action_length = 0
+            if action_code > 0x7F:
+                action_length = stream.read('uintle:16')
+            action_stream = stream.read('bits:{0}'.format(action_length*8))
+            self.actions.append(ActionFactory.new_action(action_stream,
+                                                         action_code,
+                                                         action_length) )
     
-def ClipEventFlags(object):
+class ClipEventFlags(object):
     def __init__(self,stream,swf_version):
         self.clip_event_key_up = stream.read('bool')
         self.clip_event_key_down = stream.read('bool')
@@ -210,7 +220,7 @@ def ClipEventFlags(object):
                  "ClipEventUnload: {0}",format(self.clip_event_unload),
                  "ClipEventEnterFrame: {0}".format(self.clip_event_enter_frame),
                  "ClipEventLoad: {0}".format(self.clip_event_load) ]
-        if self.clip_event_drag_over is not None:
+        if hasattr(self,"clip_event_drag_over"):
             items.append("ClipEventDragOver: {0}".format(self.clip_event_drag_over))
             items.append("ClipEventRollOut: {0}".format(self.clip_event_roll_out))
             items.append("ClipEventRollOver: {0}".format(self.clip_event_roll_over))
@@ -219,7 +229,7 @@ def ClipEventFlags(object):
             items.append("ClipEventPress: {0}".format(self.clip_event_press))
             items.append("ClipEventInitialize: {0}".format(self.clip_event_initialize))
         items.append("ClipEventData: {0}".format(self.clip_event_data))
-        if self.clip_event_construct is not None:
+        if hasattr(self,"clip_event_construct"):
             items.append("ClipEventConstruct: {0}".format(self.clip_event_construct))
             items.append("ClipEventKeyPress: {0}".format(self.clip_event_key_press))
             items.append("ClipEventDragOut: {0}".format(self.clip_event_drag_out))
