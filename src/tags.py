@@ -652,18 +652,6 @@ def define_shape_4(stream):
     print "UsesScalingStrokes:",stream.read('bool')
     datatypes.shape_with_style(stream,"DefineShape4")
     
-def remove_object(stream):
-    print "CharacterId:",stream.read('uintle:16')
-    print "Depth:",stream.read('uintle:16')
-
-def remove_object_2(stream):
-    print "Depth:",stream.read('uintle:16')
-
-def set_background_color(stream):
-    # Data should be an RGB color record.
-    rgb = datatypes.rgb_color_record(stream)
-    print "Background colour: RGB =",rgb
-
 def define_text(stream):
     print "FontId:",stream.read('uintle:16')
     starting_bytepos = stream.bytepos
@@ -727,14 +715,6 @@ def define_bits_jpeg_2(stream):
         f.close()
         print "Wrote JPEG data to",filename
 
-def place_object(stream):
-    character_id = stream.read('uintle:16')
-    print "CharacterID:",character_id
-    depth = stream.read('uintle:16')
-    print "Depth:",depth
-    stream = datatypes.matrix(stream)
-    stream = datatypes.cxform(stream)
-
 def place_object_2(stream):
     flag_has_clip_actions = stream.read('bool')
     flag_has_clip_depth = stream.read('bool')
@@ -762,67 +742,6 @@ def place_object_2(stream):
     if flag_has_clip_actions:
         pass
 
-def define_edit_text(stream):
-    character_id = stream.read('uintle:16')
-    print "Character ID",character_id
-    print "Bounds:"
-    stream = datatypes.rect(stream)
-    has_text = stream.read('bool')
-    print "HasText:",has_text
-    word_wrap = stream.read('bool')
-    print "WordWrap:",word_wrap
-    multiline = stream.read('bool')
-    print "Multiline:",multiline
-    password = stream.read('bool')
-    print "Password:",password
-    read_only = stream.read('bool')
-    print "ReadOnly:",read_only
-    has_text_color = stream.read('bool')
-    print "HasTextColor:",has_text_color
-    has_max_length = stream.read('bool')
-    print "HasMaxLength:",has_max_length
-    has_font = stream.read('bool')
-    print "HasFont:",has_font
-    has_font_class = stream.read('bool')
-    print "HasFontClass:",has_font_class
-    auto_size = stream.read('bool')
-    print "AutoSize:",auto_size
-    has_layout = stream.read('bool')
-    print "HasLayout:",has_layout
-    no_select = stream.read('bool')
-    print "NoSelect:",no_select
-    border = stream.read('bool')
-    print "Border:",border
-    was_static = stream.read('bool')
-    print "WasStatic:",was_static
-    html = stream.read('bool')
-    print "HTML:",html
-    use_outlines = stream.read('bool')
-    print "UseOutlines:",use_outlines
-    if has_font:
-        print "FontID:",stream.read('uintle:16')
-    if has_font_class:
-        stream, font_class = datatypes.string(stream)
-        print "FontClass:",font_class
-    if has_font:
-        print "FontHeight:",stream.read('uintle:16')
-    if has_text_color:
-        rgba = datatypes.rgba_color_record(stream)
-        print "TextColor:",rgba
-    if has_max_length:
-        print "MaxLength:",stream.read('uintle:16')
-    if has_layout:
-        print "Align:",stream.read('uintle:8')
-        print "LeftMargin:",stream.read('uintle:16')
-        print "RightMargin:",stream.read('uintle:16')
-        print "Indent:",stream.read('uintle:16')
-        print "Leading:",stream.read('intle:16')
-    stream, variable_name = datatypes.string(stream)
-    print "VariableName:",variable_name
-    if has_text:
-        stream, initial_text = datatypes.string(stream)
-        print "InitialText:",initial_text
-
 def define_sprite(stream):
     #print '%r' % data
     sprite_id = stream.read('uintle:16')
@@ -840,18 +759,6 @@ def define_sprite(stream):
         else:
             stream.pos = current_pos + (tag_length*8) + 16
         
-def frame_label(stream):
-    stream, name = datatypes.string(stream)
-    print "Name:",name
-
-def script_limits(stream):
-    print "MaxRecursionDepth:",stream.read('uintle:16')
-    print "ScriptTimeoutSeconds:",stream.read('uintle:16')
-
-def set_tab_index(stream):
-    print "Depth:",stream.read('uintle:16')
-    print "TabIndex:",stream.read('uintle:16')
-
 def not_implemented(data):
     print "No parser for this tag yet."
     
