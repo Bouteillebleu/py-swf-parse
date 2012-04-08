@@ -2,7 +2,7 @@
 # First go - using http://the-labs.com/MacromediaFlash/SWF-Spec/SWFfileformat.html as guide.
 import sys, os, zlib
 import datatypes
-from tags import TagFactory
+from tags import TagFactory, Tag
 from bitstring import ConstBitStream
 
 class Swf(object):
@@ -37,8 +37,6 @@ class Swf(object):
         self.framerate = datatypes.Fixed8(self._bitstream)
         self.framecount = self._bitstream.read('uintle:16')
 
-        self.display_header() # DEBUG
-
     def display_header(self):
         print "Compressed:",self.compressed
         print "Version:",self.version
@@ -70,6 +68,24 @@ class Swf(object):
         for i, tag in enumerate(self.tags):
             print "== Tag {0}: {1} ==".format(i,tag.__class__.__name__)
             tag.display()
+
+    def included_tags(self):
+        # This doesn't include tags that are part of DefineSprite.
+        # Not yet, at least.
+        print "Tags in this file:"
+        tag_classes = [tag.__class__ for tag in self.tags]
+        tag_instances = dict((c, tag_classes.count(c)) for c in tag_classes)
+        for tag_class, number in sorted(tag_instances.items(),
+                                        key=lambda x: x[1],
+                                        reverse=True):
+            print "{0}: {1} time{2}".format(tag_class.__name__,
+                                            number,
+                                            "s"[number==1:])
+            if tag_class.parse == Tag.parse:
+                print "  parser not implemented"
+            else:
+                print "  parser implemented"
+        
 
 # ========
 
@@ -159,4 +175,5 @@ if __name__ == "__main__":
     swf_object = Swf(sys.argv[1])
     swf_object.display_header()
     swf_object.display_tags()
+    swf_object.included_tags()
 
