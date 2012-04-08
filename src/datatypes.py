@@ -4,6 +4,239 @@ Created on 20 Oct 2011
 @author: Bluebottle
 '''
 
+class Rect(object):
+    def __init__(self,stream):
+        # Read the Nbits field - the first 5 bits - to find the size of the next ones.
+        self.nbits = stream.read('uint:5')
+        if self.nbits == 0:
+            self.x_min = 0
+            self.x_max = 0
+            self.y_min = 0
+            self.y_max = 0
+        else:
+            nbits_format = 'int:%d' % self.nbits
+            self.x_min = stream.read(nbits_format)
+            self.x_max = stream.read(nbits_format)
+            self.y_min = stream.read(nbits_format)
+            self.y_max = stream.read(nbits_format)
+        stream.bytealign()
+    
+    def __str__(self):
+        return "XMin: {0}\nXMax: {1}\nYMin: {2}\nYMax: {3}".format(self.x_min,
+                                                                   self.x_max,
+                                                                   self.y_min,
+                                                                   self.y_max)
+
+class Fixed8(object):
+    def __init__(self,stream):
+        self.low = stream.read('uintle:8')
+        self.high = stream.read('uintle:8')
+    
+    def __str__(self):
+        return "{0}.{1}".format(self.high,self.low)
+
+class Fixed(object):
+    def __init__(self,stream):
+        self.low = stream.read('uintle:16')
+        self.high = stream.read('uintle:16')
+    
+    def __str__(self):
+        return "{0}.{1}".format(self.high,self.low)
+
+class Rgb(object):
+    def __init__(self,stream):
+        self.r = stream.read('uintle:8')
+        self.g = stream.read('uintle:8')
+        self.b = stream.read('uintle:8')
+    
+    def __str__(self):
+        return "({0},{1},{2})".format(self.r,self.g,self.b)
+
+class Rgba(object):
+    def __init__(self,stream):
+        self.r = stream.read('uintle:8')
+        self.g = stream.read('uintle:8')
+        self.b = stream.read('uintle:8')
+        self.a = stream.read('uintle:8')
+    
+    def __str__(self):
+        return "({0},{1},{2},{3})".format(self.r,self.g,self.b,self.a)
+
+class Cxform(object):
+    def __init__(self,stream):
+        self.has_add_terms = stream.read('bool')
+        self.has_mult_terms = stream.read('bool')
+        n_bits = stream.read('uint:4')
+        n_bits_format = 'int:{0}'.format(n_bits)
+        if self.has_mult_terms:
+            self.red_mult_term = stream.read(n_bits_format)
+            self.green_mult_term = stream.read(n_bits_format)
+            self.blue_mult_term = stream.read(n_bits_format)
+        if self.has_add_terms:
+            self.red_add_term = stream.read(n_bits_format)
+            self.green_add_term = stream.read(n_bits_format)
+            self.blue_add_term = stream.read(n_bits_format)
+        stream.bytealign()
+    
+    def __str__(self):
+        s = "\nHasAddTerms: {0}\nHasMultTerms: {1}".format(self.has_add_terms,
+                                                           self.has_mult_terms)
+        if self.has_mult_terms:
+            s += "\nRedMultTerm: {0}\nGreenMultTerm: {1}\nBlueMultTerm: {2}".format(self.red_mult_term,self.green_mult_term,self.blue_mult_term)
+        if self.has_add_terms:
+            s += "\nRedAddTerm: {0}\nGreenAddTerm: {1}\nBlueAddTerm: {2}".format(self.red_add_term,self.green_add_term,self.blue_add_term)
+        return s
+
+class CxformWithAlpha(object):
+    def __init__(self,stream):
+        self.has_add_terms = stream.read('bool')
+        self.has_mult_terms = stream.read('bool')
+        n_bits = stream.read('uint:4')
+        n_bits_format = 'int:{0}'.format(n_bits)
+        if self.has_mult_terms:
+            self.red_mult_term = stream.read(n_bits_format)
+            self.green_mult_term = stream.read(n_bits_format)
+            self.blue_mult_term = stream.read(n_bits_format)
+            self.alpha_mult_term = stream.read(n_bits_format)
+        if self.has_add_terms:
+            self.red_add_term = stream.read(n_bits_format)
+            self.green_add_term = stream.read(n_bits_format)
+            self.blue_add_term = stream.read(n_bits_format)
+            self.alpha_add_term = stream.read(n_bits_format)
+        stream.bytealign()
+    
+    def __str__(self):
+        s = "\nHasAddTerms: {0}\nHasMultTerms: {1}".format(self.has_add_terms,
+                                                           self.has_mult_terms)
+        if self.has_mult_terms:
+            s += "\nRedMultTerm: {0}\nGreenMultTerm: {1}\nBlueMultTerm: {2}\nAlphaMultTerm: {3}".format(self.red_mult_term,self.green_mult_term,self.blue_mult_term,self.alpha_mult_term)
+        if self.has_add_terms:
+            s += "\nRedAddTerm: {0}\nGreenAddTerm: {1}\nBlueAddTerm: {2}\nAlphaAddTerm: {3}".format(self.red_add_term,self.green_add_term,self.blue_add_term,self.alpha_add_term)
+        return s
+
+def Matrix(object):
+    def __init__(self,stream):
+        # Original comments say "they're actually 16.16 fixed-point"
+        # for the scale/rotate/translate factors, but this doesn't seem 
+        # to make any sense. Will look into this later on.
+        self.has_scale = stream.read('bool')
+        if self.has_scale:
+            n_scale = stream.read('uint:5')
+            scale_format = 'uint:%d' % n_scale
+            self.scale_x = stream.read(scale_format)
+            self.scale_y = stream.read(scale_format) 
+        self.has_rotate = stream.read('bool')
+        if self.has_rotate:
+            n_rotate_bits = stream.read('uint:5')
+            rotate_format = 'uint:%d' % n_rotate_bits
+            self.rotate_skew_0 = stream.read(rotate_format)
+            self.rotate_skew_1 = stream.read(rotate_format)
+        n_translate_bits = stream.read('uint:5')
+        if n_translate_bits > 0:
+            translate_format = 'int:%d' % n_translate_bits
+            self.translate_x = stream.read(translate_format)
+            self.translate_y = stream.read(translate_format)
+        stream.bytealign()
+    
+    def __str__(self):
+        s = "\nHasScale: {0}".format(self.has_scale)
+        if self.has_scale:
+            s += "\nScaleX: {0}\nScaleY: {1}".format(self.scale_x,self.scale_y)
+        s += "\nHasRotate: {0}".format(self.has_rotate)
+        if self.has_rotate:
+            s += "\nRotateSkew0: {0}\nRotateSkew1: {1}".format(self.rotate_skew_0,self.rotate_skew_1)
+        if self.translate_x:
+            s += "\nTranslateX: {0}\nTranslateY: {1}".format(self.translate_x,self.translate_y)
+        return s
+
+def ClipActions(object):
+    def __init__(self,stream,swf_version):
+        stream.pos += 16
+        self.all_event_flags = ClipEventFlags(stream,swf_version)
+        if swf_version > 5:
+            flag_size = 32
+        else:
+            flag_size = 16
+        self.clip_action_records = []
+        while stream.peek('uintle:{0}'.format(flag_size)) != 0:
+            self.clip_action_records.append(ClipActionRecord(stream,
+                                                             swf_version))
+        self.pos += flag_size
+
+def ClipActionRecord(object):
+    def __init__(self,stream,swf_version):
+        self.event_flags = ClipEventFlags(stream,swf_version)
+        self.action_record_size = stream.read('uintle:32')
+        initial_bytepos = stream.bytepos
+        if self.event_flags.clip_event_key_press is not None:
+            self.key_code = stream.read('uintle:8')
+        self.actions = []
+        #while stream.bytepos < initial_bytepos + self.action_record_size:
+        #    self.actions.append(ActionRecord(
+    
+def ClipEventFlags(object):
+    def __init__(self,stream,swf_version):
+        self.clip_event_key_up = stream.read('bool')
+        self.clip_event_key_down = stream.read('bool')
+        self.clip_event_mouse_up = stream.read('bool')
+        self.clip_event_mouse_down = stream.read('bool')
+        self.clip_event_mouse_move = stream.read('bool')
+        self.clip_event_unload = stream.read('bool')
+        self.clip_event_enter_frame = stream.read('bool')
+        self.clip_event_load = stream.read('bool')
+        if swf_version > 5:
+            self.clip_event_drag_over = stream.read('bool')
+            self.clip_event_roll_out = stream.read('bool')
+            self.clip_event_roll_over = stream.read('bool')
+            self.clip_event_release_outside = stream.read('bool')
+            self.clip_event_release = stream.read('bool')
+            self.clip_event_press = stream.read('bool')
+            self.clip_event_initialize = stream.read('bool')
+        else:
+            self.pos += 7
+        self.clip_event_data = stream.read('bool')
+        if swf_version > 5:
+            self.pos += 5
+            self.clip_event_construct = stream.read('bool')
+            self.clip_event_key_press = stream.read('bool')
+            self.clip_event_drag_out = stream.read('bool')
+        self.pos += 8
+    
+    def __str__(self):
+        items = ["\nClipEventKeyUp: {0}".format(self.clip_event_key_up),
+                 "ClipEventKeyDown: {0}".format(self.clip_event_key_down),
+                 "ClipEventMouseUp: {0}".format(self.clip_event_mouse_up),
+                 "ClipEventMouseDown: {0}".format(self.clip_event_mouse_down),
+                 "ClipEventUnload: {0}",format(self.clip_event_unload),
+                 "ClipEventEnterFrame: {0}".format(self.clip_event_enter_frame),
+                 "ClipEventLoad: {0}".format(self.clip_event_load) ]
+        if self.clip_event_drag_over is not None:
+            items.append("ClipEventDragOver: {0}".format(self.clip_event_drag_over))
+            items.append("ClipEventRollOut: {0}".format(self.clip_event_roll_out))
+            items.append("ClipEventRollOver: {0}".format(self.clip_event_roll_over))
+            items.append("ClipEventReleaseOutside: {0}".format(self.clip_event_release_outside))
+            items.append("ClipEventRelease: {0}".format(self.clip_event_release))
+            items.append("ClipEventPress: {0}".format(self.clip_event_press))
+            items.append("ClipEventInitialize: {0}".format(self.clip_event_initialize))
+        items.append("ClipEventData: {0}".format(self.clip_event_data))
+        if self.clip_event_construct is not None:
+            items.append("ClipEventConstruct: {0}".format(self.clip_event_construct))
+            items.append("ClipEventKeyPress: {0}".format(self.clip_event_key_press))
+            items.append("ClipEventDragOut: {0}".format(self.clip_event_drag_out))
+        return "\n".join(items)
+
+# ========
+
+def string(stream):
+    # Not a new class; produces a Python 2.x string.
+    new_string = ''
+    while stream.peek('uintle:8') != 0:
+        new_string += stream.read('bytes:1')
+    stream.bytepos += 1 # Ignore the final 0 in the string.
+    return new_string
+
+# ========
+
 def rgb_color_record(stream):
     # Data should be 3 bytes long: R, G and B values, each read as UI8.
     r = stream.read('uintle:8')
@@ -27,13 +260,6 @@ def fixed(stream):
     low = stream.read('uintle:16')
     high = stream.read('uintle:16')
     return high,low
-
-def string(stream):
-    new_string = ''
-    while stream.peek('uintle:8') != 0:
-        new_string += stream.read('bytes:1')
-    stream.bytepos += 1 # Ignore the final 0 in the string.
-    return stream, new_string
 
 def rect(stream):
     # Read the Nbits field - the first 5 bits - to find the size of the next ones.
