@@ -13,6 +13,7 @@ class TagFactory(object):
     def new_tag(swf_version,stream,tag_type,tag_length):
         tag_class = class_from_tag_number(tag_type)
         if tag_class is not None:
+            print "  Creating new tag: {0}, length {1}".format(tag_class.__name__,tag_length)
             return tag_class(swf_version,stream,tag_type,tag_length)
         else:
             return Tag(swf_version,stream,tag_type,tag_length)
@@ -422,8 +423,8 @@ class DefineVideoStream(Tag):
         self.width = stream.read('uintle:16')
         self.height = stream.read('uintle:16')
         stream.pos += 4
-        self.video_flags_deblocking = stream.read('uintle:3') # TODO: enums!
-        self.video_flags_smoothing = stream.read('uintle:1') # TODO: bool?
+        self.video_flags_deblocking = stream.read('uint:3') # TODO: enums!
+        self.video_flags_smoothing = stream.read('uint:1') # TODO: bool?
         self.codec_id = stream.read('uintle:8') # TODO: enums!
         # TODO: Finish
         stream.bytealign()

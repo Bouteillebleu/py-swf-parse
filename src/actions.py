@@ -11,6 +11,7 @@ class ActionFactory(object):
     def new_action(stream,action_type,action_length):
         action_class = class_from_action_number(action_type)
         if action_class is not None:
+            print "  Creating new action: {0}, length {1}".format(action_class.__name__,action_length)
             return action_class(stream,action_type,action_length)
         else:
             return Action(stream,action_type,action_length)
@@ -692,7 +693,7 @@ class ActionDefineFunction2(Action):
         self.code_size = stream.read('uintle:16')
         initial_bytepos = stream.bytepos
         self.actions = []
-        while stream.bytepos < initial_bytepos + self.code_size:
+        while stream.pos < stream.len and stream.bytepos < initial_bytepos + self.code_size:
             action_code = stream.read('uintle:8')
             action_length = 0
             if action_code > 0x7F:
@@ -895,7 +896,7 @@ class ActionDefineFunction(Action):
         self.code_size = stream.read('uintle:16')
         initial_bytepos = stream.bytepos
         self.actions = []
-        while stream.bytepos < initial_bytepos + self.code_size:
+        while stream.pos < stream.len and stream.bytepos < initial_bytepos + self.code_size:
             action_code = stream.read('uintle:8')
             action_length = 0
             if action_code > 0x7F:
