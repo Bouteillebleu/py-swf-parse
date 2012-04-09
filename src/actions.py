@@ -36,301 +36,911 @@ class Action(object):
 # ==== Individual actions ====
 
 class ActionNextFrame(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionPreviousFrame(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionPlay(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStop(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionToggleQuality(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStopSounds(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionAdd(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionSubtract(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionMultiply(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionDivide(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionEquals(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionLess(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionAnd(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionOr(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionNot(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStringEquals(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStringLength(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStringExtract(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionPop(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionToInteger(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionGetVariable(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionSetVariable(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionSetTarget2(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStringAdd(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionGetProperty(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionSetProperty(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionCloneSprite(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionRemoveSprite(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionTrace(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStartDrag(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionEndDrag(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStringLess(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionThrow(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionCastOp(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionImplementsOp(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionRandomNumber(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionMBStringLength(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionCharToAscii(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionAsciiToChar(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionGetTime(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionMBStringExtract(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionMBCharToAscii(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionMBAsciiToChar(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionDelete(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionDelete2(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionDefineLocal(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionCallFunction(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionReturn(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionModulo(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionNewObject(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionDefineLocal2(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionInitArray(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionInitObject(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionTypeOf(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionTargetPath(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionEnumerate(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionAdd2(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionLess2(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionEquals2(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionToNumber(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionToString(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionPushDuplicate(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStackSwap(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionGetMember(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionSetMember(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionIncrement(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionDecrement(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionCallMethod(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionNewMethod(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionInstanceOf(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionEnumerate2(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionBitAnd(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionBitOr(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionBitXor(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionBitLShift(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionBitRShift(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionBitURShift(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStrictEquals(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionGreater(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionStringGreater(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionExtends(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionGotoFrame(Action):
-    pass
+    def parse(self,stream):
+        self.frame = stream.read('uintle:16')
+    
+    def display(self):
+        print "Frame:",self.frame
 
 class ActionGetURL(Action):
-    pass
-
+    def parse(self,stream):
+        self.url_string = datatypes.string(stream)
+        self.target_string = datatypes.string(stream)
+    
+    def display(self):
+        print "UrlString:",self.url_string
+        print "TargetString:",self.target_string
+        
 class ActionStoreRegister(Action):
-    pass
+    def parse(self,stream):
+        self.register_number = stream.read('uintle:8')
+    
+    def display(self):
+        print "RegisterNumber:",self.register_number
 
 class ActionConstantPool(Action):
-    pass
+    def parse(self,stream):
+        self.count = stream.read('uintle:16')
+        self.constant_pool = []
+        for i in range(0,self.count):
+            self.constant_pool.append(datatypes.string(stream))
+    
+    def display(self):
+        print "Count:",self.count
+        for i, item in enumerate(self.constant_pool):
+            print "Constant {0}: {1}".format(i,item)
 
 class ActionWaitForFrame(Action):
-    pass
+    def parse(self,stream):
+        self.frame = stream.read('uintle:16')
+        self.skip_count = stream.read('uintle:8')
+    
+    def display(self):
+        print "Frame:",self.frame
+        print "SkipCount:",self.skip_count
 
 class ActionSetTarget(Action):
-    pass
+    def parse(self,stream):
+        self.target_name = datatypes.string(stream)
+    
+    def display(self):
+        print "TargetName:",self.target_name
 
 class ActionGoToLabel(Action):
-    pass
+    def parse(self,stream):
+        self.label = datatypes.string(stream)
+    
+    def display(self):
+        print "Label:",self.label
 
 class ActionWaitForFrame2(Action):
-    pass
+    def parse(self,stream):
+        self.skip_count = stream.read('uintle:8')
+    
+    def display(self):
+        print "SkipCount:",self.skip_count
 
 class ActionDefineFunction2(Action):
-    pass
+    def parse(self,stream):
+        self.function_name = datatypes.string(stream)
+        self.num_params = stream.read('uintle:16')
+        self.register_count = stream.read('uintle:8')
+        self.preload_parent_flag = stream.read('bool')
+        self.preload_root_flag = stream.read('bool')
+        self.suppress_super_flag = stream.read('bool')
+        self.preload_super_flag = stream.read('bool')
+        self.suppress_arguments_flag = stream.read('bool')
+        self.preload_arguments_flag = stream.read('bool')
+        self.suppress_this_flag = stream.read('bool')
+        self.preload_this_flag = stream.read('bool')
+        stream.pos += 7
+        self.preload_global_flag = stream.read('bool')
+        self.parameters = []
+        for i in range(0,self.num_params):
+            self.parameters.append({'register': stream.read('uintle:8'),
+                                    'param_name': datatypes.string(stream)
+                                    })
+        self.code_size = stream.read('uintle:16')
+        initial_bytepos = stream.bytepos
+        self.actions = []
+        while stream.bytepos < initial_bytepos + self.code_size:
+            action_code = stream.read('uintle:8')
+            action_length = 0
+            if action_code > 0x7F:
+                action_length = stream.read('uintle:16')
+            action_stream = stream.read('bits:{0}'.format(action_length*8))
+            self.actions.append(ActionFactory.new_action(action_stream,
+                                                         action_code,
+                                                         action_length))    
+
+    
+    def display(self):
+        print "FunctionName:",self.function_name
+        print "NumParams:",self.num_params
+        print "RegisterCount:",self.register_count
+        print "PreloadParentFlag:",self.preload_parent_flag
+        print "PreloadRootFlag:",self.preload_root_flag
+        print "SuppressSuperFlag:",self.suppress_super_flag
+        print "PreloadSuperFlag:",self.preload_super_flag
+        print "SuppressArgumentsFlag:",self.suppress_arguments_flag
+        print "PreloadArgumentsFlag:",self.preload_arguments_flag
+        print "SuppressThisFlag:",self.suppress_this_flag
+        print "PreloadThisFlag:",self.preload_this_flag
+        print "PreloadGlobalFlag:",self.preload_global_flag
+        print "Parameters are:"
+        for p, param in self.parameters:
+            print "  Param {0}: Register {1}, ParamName {2}".format(p,param['register'],param['param_name']
+        print "CodeSize:",self.code_size
+        print "Function code contains the following actions:"
+        for a, action in enumerate(self.actions):
+            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            action.display()
+
 
 class ActionTry(Action):
-    pass
+    def parse(self,stream):
+        stream.pos += 5
+        self.catch_in_register_flag = stream.read('bool')
+        self.finally_block_flag = stream.read('bool')
+        self.catch_block_flag = stream.read('bool')
+        self.try_size = stream.read('uintle:16')
+        self.catch_size = stream.read('uintle:16')
+        self.finally_size = stream.read('uintle:16')
+        if self.catch_in_register_flag == False:
+            self.catch_name = datatypes.string(stream)
+        else:
+            self.catch_register = stream.read('uintle:8')
+        # TryBody
+        initial_bytepos = stream.bytepos
+        self.try_body = []
+        while stream.bytepos < initial_bytepos + self.try_size:
+            action_code = stream.read('uintle:8')
+            action_length = 0
+            if action_code > 0x7F:
+                action_length = stream.read('uintle:16')
+            action_stream = stream.read('bits:{0}'.format(action_length*8))
+            self.try_body.append(ActionFactory.new_action(action_stream,
+                                                          action_code,
+                                                          action_length))    
+        # CatchBody
+        initial_bytepos = stream.bytepos
+        self.catch_body = []
+        while stream.bytepos < initial_bytepos + self.catch_size:
+            action_code = stream.read('uintle:8')
+            action_length = 0
+            if action_code > 0x7F:
+                action_length = stream.read('uintle:16')
+            action_stream = stream.read('bits:{0}'.format(action_length*8))
+            self.catch_body.append(ActionFactory.new_action(action_stream,
+                                                            action_code,
+                                                            action_length))    
+
+        # FinallyBody
+        initial_bytepos = stream.bytepos
+        self.finally_body = []
+        while stream.bytepos < initial_bytepos + self.finally_size:
+            action_code = stream.read('uintle:8')
+            action_length = 0
+            if action_code > 0x7F:
+                action_length = stream.read('uintle:16')
+            action_stream = stream.read('bits:{0}'.format(action_length*8))
+            self.finally_body.append(ActionFactory.new_action(action_stream,
+                                                              action_code,
+                                                            action_length))    
+            
+        
+                    
+    def display(self):
+        print "CatchInRegisterFlag:",self.catch_in_register_flag
+        print "FinallyBlockFlag:",self.finally_block_flag
+        print "CatchBlockFlag:",self.catch_block_flag
+        print "TrySize:",self.try_size
+        print "CatchSize:",self.catch_size
+        print "FinallySize:",self.finally_size
+        if self.catch_in_register_flag == False:
+            print "CatchName:",self.catch_name
+        else:
+            print "CatchRegister:",self.catch_register
+        print "Try block contains the following actions:"
+        for a, action in enumerate(self.try_body):
+            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            action.display()
+        print "Catch block contains the following actions:"
+        for a, action in enumerate(self.catch_body):
+            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            action.display()
+        print "Finally block contains the following actions:"
+        for a, action in enumerate(self.finally_body):
+            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            action.display()
+
+
 
 class ActionWith(Action):
-    pass
+    def parse(self,stream):
+        self.size = stream.read('uintle:16')
+        initial_bytepos = stream.bytepos
+        self.actions = []
+        while stream.bytepos < initial_bytepos + self.code_size:
+            action_code = stream.read('uintle:8')
+            action_length = 0
+            if action_code > 0x7F:
+                action_length = stream.read('uintle:16')
+            action_stream = stream.read('bits:{0}'.format(action_length*8))
+            self.actions.append(ActionFactory.new_action(action_stream,
+                                                         action_code,
+                                                         action_length))    
+    
+    def display(self):
+        print "Size:",self.code_size
+        print "With block contains the following actions:"
+        for a, action in enumerate(self.actions):
+            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            action.display()
 
 class ActionPush(Action):
-    pass
+    def parse(self,stream):
+        self.type = stream.read('uintle:8')
+        if self.type == 0:
+            self.string = datatypes.string(stream)
+        elif self.type == 1:
+            self.float = stream.read('floatle:32')
+        elif self.type == 4:
+            self.register_number = stream.read('uintle:8')
+        elif self.type == 5:
+            self.boolean = stream.read('uintle:8')
+        elif self.type == 6:
+            self.double = stream.read('floatle:64')
+        elif self.type == 7:
+            self.integer = stream.read('uintle:32')
+        elif self.type == 8:
+            self.constant_8 = stream.read('uintle:8')
+        elif self.type == 9:
+            self.constant_16 = stream.read('uintle:16')
+    
+    def display(self):
+        print "Type:",self.type
+        if self.type == 0:
+            print "String:",self.string
+        elif self.type == 1:
+            print "Float:",self.float
+        elif self.type == 4:
+            print "RegisterNumber:",self.register_number
+        elif self.type == 5:
+            print "Boolean:",self.boolean
+        elif self.type == 6:
+            print "Double:",self.double
+        elif self.type == 7:
+            print "Integer:",self.integer
+        elif self.type == 8:
+            print "Constant8:",self.constant_8
+        elif self.type == 9:
+            print "Constant16:",self.constant_16
 
 class ActionJump(Action):
-    pass
+    def parse(self,stream):
+        self.branch_offset = stream.read('intle:16')
+    
+    def display(self):
+        print "BranchOffset:",self.branch_offset
 
 class ActionGetURL2(Action):
-    pass
+    def parse(self,stream):
+        self.send_vars_method = stream.read('uintle:2')
+        stream.pos += 4
+        self.load_target_flag = stream.read('bool')
+        self.load_variables_flag = stream.read('bool')
+    
+    def display(self):
+        print "SendVarsMethod:",self.send_vars_method
+        print "LoadTargetFlag:",self.load_target_flag
+        print "LoadVariablesFlag:",self.load_variables_flag
 
 class ActionDefineFunction(Action):
-    pass
+    def parse(self,stream):
+        self.function_name = datatypes.string(stream)
+        self.num_params = stream.read('uintle:16')
+        self.params = []
+        for i in range(0,self.num_params):
+            self.params.append(datatypes.string(stream))
+        self.code_size = stream.read('uintle:16')
+        initial_bytepos = stream.bytepos
+        self.actions = []
+        while stream.bytepos < initial_bytepos + self.code_size:
+            action_code = stream.read('uintle:8')
+            action_length = 0
+            if action_code > 0x7F:
+                action_length = stream.read('uintle:16')
+            action_stream = stream.read('bits:{0}'.format(action_length*8))
+            self.actions.append(ActionFactory.new_action(action_stream,
+                                                         action_code,
+                                                         action_length))    
+            
+    def display(self):
+        print "FunctionName:",self.function_name
+        print "NumParams:",self.num_params
+        for p, param in enumerate(self.params):
+            print "Param {0}: {1}".format(p,param)
+        print "CodeSize:",self.code_size
+        print "Function code contains the following actions:"
+        for a, action in enumerate(self.actions):
+            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            action.display()
 
 class ActionIf(Action):
-    pass
+    def parse(self,stream):
+        self.branch_offset = stream.read('intle:16')
+    
+    def display(self):
+        print "BranchOffset:",self.branch_offset
 
 class ActionCall(Action):
-    pass
+    def parse(self,stream):
+        pass
+    
+    def display(self):
+        pass
 
 class ActionGotoFrame2(Action):
-    pass
+    def parse(self,stream):
+        stream.pos += 6
+        self.scene_bias_flag = stream.read('bool')
+        self.play_flag = stream.read('bool')
+        if self.scene_bias_flag:
+            self.scene_bias = stream.read('uintle:16')
+    
+    def display(self):
+        print "SceneBiasFlag:",self.scene_bias_flag
+        print "PlayFlag:",self.play_flag
+        if self.scene_bias_flag:
+            print "SceneBias:",self.scene_bias
 
 # ==== Summary data for actions ====
 
@@ -440,145 +1050,3 @@ def class_from_action_number(number):
         return action_data[number]['class']
     else:
         return None
-
-
-# ==== Old-style action parsers ====
-
-def goto_frame(stream):
-    frame = stream.read('uintle:16')
-    print "Go to frame:",frame
-
-def get_url(stream):
-    stream, url_string = datatypes.string(stream)
-    print "URLString:",url_string
-    stream, target_string = datatypes.string(stream)
-    print "TargetString:",target_string
-
-def constant_pool(stream):
-    constant_count = stream.read('uintle:16')
-    print "Total constants:",constant_count
-    constants_so_far = 0
-    while stream.pos < stream.len and constants_so_far < constant_count:
-        stream, string_so_far = datatypes.string(stream)
-        print "Constant",constants_so_far,"is:",string_so_far
-        constants_so_far += 1
-
-def wait_for_frame(stream):
-    print "Frame",stream.read('uintle:16')
-    print "SkipCount",stream.read('uintle:8')
-
-def set_target(stream):
-    stream, target_name = datatypes.string(stream)
-    print "TargetName:",target_name
-
-def wait_for_frame_2(stream):
-    print "SkipCount",stream.read('uintle:8')
-
-def goto_label(stream):
-    stream, label = datatypes.string(stream)
-    print "Label:",label
-
-def action_with(stream):
-    print "Size:",stream.read('uintle:16')
-
-def push(stream):
-    data_type = stream.read('uintle:8')
-    if data_type == 0:
-        stream, string_so_far = datatypes.string(stream)
-        print "Pushed string:",string_so_far
-    elif data_type == 1:
-        float_pushed = stream.read('floatle:32')
-        print "Pushed float:",float_pushed
-    elif data_type == 4:
-        register_number_pushed = stream.read('uintle:8')
-        print "Pushed register number:",register_number_pushed
-    elif data_type == 5:
-        boolean_pushed = stream.read('uintle:8')
-        print "Pushed boolean:",boolean_pushed
-    elif data_type == 6:
-        double_pushed = stream.read('floatle:64')
-        print "Pushed double:",double_pushed
-    elif data_type == 7:
-        integer_pushed = stream.read('uintle:32')
-        print "Pushed integer:",integer_pushed
-    elif data_type == 8:
-        constant_pushed = stream.read('uintle:8')
-        print "Pushed constant:",constant_pushed
-    elif data_type == 9:
-        constant_pushed = stream.read('uintle:16')
-        print "Pushed constant:",constant_pushed
-
-def jump(stream):
-    print "BranchOffset:",stream.read('intle:16')
-
-def get_url_2(stream):
-    print "SendVarsMethod:",stream.read('uintle:2')
-    stream.read(4)
-    print "LoadTargetFlag:",stream.read('bool')
-    print "LoadVariablesFlag:",stream.read('bool')
-
-def define_function(stream):
-    stream, function_name = datatypes.string(stream)
-    print "FunctionName:",function_name
-    num_params = stream.read('uintle:16')
-    for i in range(num_params):
-        stream, current_param = datatypes.string(stream)
-        print "Param",i+1,":",current_param
-    print "CodeSize:",stream.read('uintle:16')
-    # TODO: And then there's something involving the remaining code.
-
-def define_function_2(stream):
-    stream, function_name = datatypes.string(stream)
-    print "FunctionName:",function_name
-    num_params = stream.read('uintle:16')
-    print "NumParams:",num_params
-    print "RegisterCount:",stream.read('uintle:8')
-    print "PreloadParentFlag:",stream.read('bool')
-    print "PreloadRootFlag:",stream.read('bool')
-    print "SuppressSuperFlag:",stream.read('bool')
-    print "PreloadSuperFlag:",stream.read('bool')
-    print "SuppressArgumentsFlag:",stream.read('bool')
-    print "PreloadArgumentsFlag:",stream.read('bool')
-    print "SuppressThisFlag:",stream.read('bool')
-    print "PreloadThisFlag:",stream.read('bool')
-    stream.pos += 7
-    print "PreloadGlobalFlag:",stream.read('bool')
-    stream.bytealign()
-    for i in range(num_params):
-        print "For parameter",i+1
-        register = stream.read('uintle:8')
-        print "Using register:",register
-        stream, param_name = datatypes.string(stream)
-        print "ParamName:",param_name
-    # TODO: And then there's something involving the remaining code.
-
-def action_try(stream):
-    stream.pos += 5
-    catch_in_register_flag = stream.read('bool')
-    print "CatchInRegisterFlag:",catch_in_register_flag
-    print "FinallyBlockFlag:",stream.read('bool')
-    print "CatchBlockFlag:",stream.read('bool')
-    print "TrySize:",stream.read('uintle:16')
-    print "CatchSize:",stream.read('uintle:16')
-    print "FinallySize:",stream.read('uintle:16')
-    if catch_in_register_flag:
-        print "CatchRegister:",stream.read('uintle:8')
-    else:
-        stream, catch_name = datatypes.string(stream)
-        print "CatchName:",catch_name
-    # TODO: And then there's the TryBody, CatchBody and FinallyBody.
-
-def action_if(stream):
-    print "BranchOffset:",stream.read('intle:16')
-
-def goto_frame_2(stream):
-    stream.read(6)
-    scene_bias_flag = stream.read('bool')
-    print "SceneBiasFlag:",scene_bias_flag
-    print "PlayFlag:",stream.read('bool')
-    if scene_bias_flag:
-        print "SceneBias:",stream.read('uintle:16')
-
-def not_implemented(data):
-    print "No parser for this action yet."
-    
