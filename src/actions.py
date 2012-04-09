@@ -3,6 +3,8 @@ Created on 22 Oct 2011
 
 @author: Bluebottle
 '''
+import datatypes
+
 
 class ActionFactory(object):
     @staticmethod
@@ -716,7 +718,7 @@ class ActionDefineFunction2(Action):
         print "PreloadGlobalFlag:",self.preload_global_flag
         print "Parameters are:"
         for p, param in self.parameters:
-            print "  Param {0}: Register {1}, ParamName {2}".format(p,param['register'],param['param_name']
+            print "  Param {0}: Register {1}, ParamName {2}".format(p,param['register'],param['param_name'])
         print "CodeSize:",self.code_size
         print "Function code contains the following actions:"
         for a, action in enumerate(self.actions):
