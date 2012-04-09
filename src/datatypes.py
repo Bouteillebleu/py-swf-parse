@@ -3,6 +3,7 @@ Created on 20 Oct 2011
 
 @author: Bluebottle
 '''
+from actions import ActionFactory
 
 class Rect(object):
     def __init__(self,stream):
@@ -161,7 +162,7 @@ class ClipActions(object):
         while stream.peek('uintle:{0}'.format(flag_size)) != 0:
             self.clip_action_records.append(ClipActionRecord(stream,
                                                              swf_version))
-        self.pos += flag_size
+        stream.pos += flag_size
     
     def __str__(self):
         return "[no str method yet, working on it]"
@@ -203,14 +204,14 @@ class ClipEventFlags(object):
             self.clip_event_press = stream.read('bool')
             self.clip_event_initialize = stream.read('bool')
         else:
-            self.pos += 7
+            stream.pos += 7
         self.clip_event_data = stream.read('bool')
         if swf_version > 5:
-            self.pos += 5
+            stream.pos += 5
             self.clip_event_construct = stream.read('bool')
             self.clip_event_key_press = stream.read('bool')
             self.clip_event_drag_out = stream.read('bool')
-        self.pos += 8
+        stream.pos += 8
     
     def __str__(self):
         items = ["\nClipEventKeyUp: {0}".format(self.clip_event_key_up),

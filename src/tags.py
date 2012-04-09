@@ -5,7 +5,6 @@ Created on 15 Oct 2011
 '''
 import os
 import struct
-import action_parsers
 from actions import ActionFactory
 import datatypes
 
