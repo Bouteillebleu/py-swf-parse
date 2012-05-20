@@ -98,7 +98,21 @@ class SetBackgroundColor(Tag):
         print "BackgroundColor:",self.background_color
 
 class DefineFont(Tag):
-    pass
+    def parse(self,stream):
+        print "stream length =",len(stream)/8
+        self.font_id = stream.read('uintle:16')
+        starting_bytepos = stream.bytepos
+        print "starting bytepos =",starting_bytepos
+        self.n_glyphs = stream.peek('uintle:16') / 2
+        self.offset_table = []
+        self.glyph_shape_table = []
+        for glyph_number in xrange(self.n_glyphs):
+            self.offset_table.append(stream.read('uintle:16'))
+            print "glyph",glyph_number,"offset =",self.offset_table[-1]
+        for glyph_number in xrange(self.n_glyphs):
+            pass
+            #stream.bytepos = starting_bytepos + self.offset_table[glyph_number]
+            #self.glyph_shape_table.append(datatypes.Shape(stream,"DefineFont"))
 
 class DefineText(Tag):
     pass

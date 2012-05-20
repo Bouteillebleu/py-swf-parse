@@ -163,6 +163,33 @@ class Matrix(object):
             s += "\nTranslateX: {0}\nTranslateY: {1}".format(self.translate_x,self.translate_y)
         return s
 
+class Gradient(object):
+    def __init__(self,stream,calling_tag):
+        self.spread_mode = stream.read('uint:2')
+        self.interpolation_mode = stream.read('uint:2')
+        self.num_gradients = stream.read('uint:4')
+        self.gradient_records = []
+        for n in range(num_gradients):
+            new_gradient = {'ratio': stream.read('uintle:8')}
+            if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
+                new_gradient['color'] = Rgb(stream)
+            else:
+                new_gradient['color'] = Rgba(stream)
+
+class FocalGradient(object):
+    def __init__(self,stream,calling_tag):
+        self.spread_mode = stream.read('uint:2')
+        self.interpolation_mode = stream.read('uint:2')
+        self.num_gradients = stream.read('uint:4')
+        self.gradient_records = []
+        for n in range(num_gradients):
+            new_gradient = {'ratio': stream.read('uintle:8')}
+            if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
+                new_gradient['color'] = Rgb(stream)
+            else:
+                new_gradient['color'] = Rgba(stream)
+        self.focal_point= Fixed8(stream)
+
 class ClipActions(object):
     def __init__(self,stream,swf_version):
         stream.pos += 16
@@ -249,6 +276,205 @@ class ClipEventFlags(object):
             items.append("ClipEventDragOut: {0}".format(self.clip_event_drag_out))
         return "\n".join(items)
 
+class Shape(object):
+    def __init__(self,stream,calling_tag):
+        print "Creating new Shape"
+        print "stream.pos =",stream.pos,"stream.bytepos =",stream.bytepos
+        self.num_fill_bits = stream.read('uint:4')
+        self.num_line_bits = stream.read('uint:4')
+        print "with fill and line bits, stream.pos =",stream.pos
+        self.shaperecords = []
+        # Note from the v10 spec: "Each individual shape is byte-aligned
+        # within an array of shape records; one shape record is padded to
+        # a byte boundary before the next shape record begins."
+        record_type = None
+        while record_type != EndShapeRecord:
+            type_flag = stream.read('uint:1')
+            if type_flag == 0:
+                if stream.peek('uint:5') == 0:
+                    # EndShapeRecord: type_flag = 0, next 5 bits all 0
+                    print "Creating new EndShapeRecord"
+                    self.shaperecords.append(EndShapeRecord(stream))
+                else:
+                    # StyleChangeRecord: type_flag = 0, at least one of next 5 bits 1.
+                    # For this, we need to know the most recent numbers for fill/line
+                    # index bits to pass into StyleChangeRecord.
+                    for shape_record in reversed(self.shaperecords):
+                        if (hasattr(shape_record,'state_new_styles') and
+                            shape_record.state_new_styles == True):
+                            # This is the most recent fill/line bit setting. Use this!
+                            fill_bits = shape_record.num_fill_bits
+                            line_bits = shape_record.num_line_bits
+                            break
+                    else:
+                        # We end up here if there aren't any records,
+                        # or if none of them define new fill/line bits.
+                        # Since they're both redefined when state_new_styles is true,
+                        # we can define them together.
+                        fill_bits = self.num_fill_bits
+                        line_bits = self.num_line_bits
+                    print "Creating new StyleChangeRecord"
+                    self.shaperecords.append(StyleChangeRecord(stream,calling_tag,
+                                                               fill_bits,line_bits))
+            else:
+                straight_flag = stream.read('uint:1')
+                if straight_flag == 0:
+                    # CurvedEdgeRecord: type_flat = 1, next bit = 0.
+                    print "Creating new CurvedEdgeRecord"
+                    self.shaperecords.append(CurvedEdgeRecord(stream))
+                else:
+                    # StraightEdgeRecord: type_flag = 1, next bit = 1
+                    print "Creating new StraightEdgeRecord"
+                    self.shaperecords.append(StraightEdgeRecord(stream))
+            record_type = self.shaperecords[-1].__class__
+
+class EndShapeRecord(object):
+    def __init__(self,stream):
+        print "before align, stream.pos =",stream.pos
+        stream.bytealign()
+        print "after align, stream.pos =",stream.pos,"stream.bytepos =",stream.bytepos
+    
+class StyleChangeRecord(object):
+    def __init__(self,stream,calling_tag,fill_bits,line_bits,first_glyph=False):
+        if calling_tag in ("DefineShape2","DefineShape3"):
+            self.state_new_styles = stream.read('bool')
+        self.state_line_style = stream.read('bool')
+        self.state_fill_style_1 = stream.read('bool')
+        self.state_fill_style_0 = stream.read('bool')
+        self.state_move_to = stream.read('bool')
+        if self.state_move_to:
+            self.move_bits = stream.read('uint:5')
+            if self.move_bits == 0:
+                self.move_delta_x = 0
+                self.move_delta_y = 0
+            else:
+                move_bits_format = 'int:%d' % self.move_bits
+                self.move_delta_x = stream.read(move_bits_format)
+                self.move_delta_y = stream.read(move_bits_format)
+        if fill_bits > 0:
+            fill_bits_format = 'uint:%d' % fill_bits
+            if self.state_fill_style_0:
+                self.fill_style_0 = stream.read(fill_bits_format)
+            if self.state_fill_style_1:
+                self.fill_style_1 = stream.read(fill_bits_format)
+        if self.state_line_style and line_bits > 0:
+            line_bits_format = 'uint:%d' % line_bits
+            self.line_style = stream.read(line_bits_format)
+        stream.bytealign()
+        if hasattr(self,'state_new_styles') and self.state_new_styles == True:
+            # TODO: Fix this up, probably turn these into lists.
+            self.fill_styles = FillStyleArray(stream,calling_tag)
+            self.line_styles = LineStyleArray(stream,calling_tag)
+            self.num_fill_bits = stream.read('uint:4')
+            self.num_line_bits = stream.read('uint:4')
+        stream.bytealign()
+
+class CurvedEdgeRecord(object):
+    def __init__(self,stream):
+        self.num_bits = stream.read('uint:4')
+        num_bits_format = 'int:%d' % (self.num_bits+2)
+        self.control_delta_x = stream.read(num_bits_format)
+        self.control_delta_y = stream.read(num_bits_format)
+        self.anchor_delta_x = stream.read(num_bits_format)
+        self.anchor_delta_y = stream.read(num_bits_format)
+        stream.bytealign()
+
+class StraightEdgeRecord(object):
+    def __init__(self,stream):
+        self.num_bits = stream.read('uint:4')
+        num_bits_format = 'int:%d' % (self.num_bits+2)
+        self.general_line_flag = stream.read('bool')
+        if self.general_line_flag:
+            self.delta_x = stream.read(num_bits_format)
+            self.delta_y = stream.read(num_bits_format)
+        else:
+            self.vert_line_flag = stream.read('bool')
+            if self.vert_line_flag:
+                self.delta_y = stream.read(num_bits_format)
+            else:
+                self.delta_x = stream.read(num_bits_format)
+        stream.bytealign()
+        # NB: this is really badly documented in the specs.
+        # I'm going by the worked example on page 266 of the v10 spec,
+        # which is closer to what the comments for STRAIGHTEDGERECORD say
+        # than what the value column actually says.
+
+class FillStyleArray(object):
+    def __init__(self,stream,calling_tag):
+        self.fill_style_count = stream.read('uintle:8')
+        total = self.fill_style_count
+        if self.fill_style_count == 0xFF and calling_tag in ('DefineShape2','DefineShape3'):
+            self.fill_style_count_extended = stream.read('uintle:16')
+            total = self.fill_style_count_extended
+        self.fill_styles = []
+        for x in xrange(total):
+            self.fill_styles.append(FillStyle(stream,calling_tag))
+
+class FillStyle(object):
+    def __init__(self,stream,calling_tag):
+        self.fill_style_type = stream.read("uintle:8")
+        if fill_style_type == 0x00:
+            if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
+                self.color = Rgb(stream)
+            else:
+                self.color = Rgba(stream)
+        if fill_style_type in (0x10,0x12,0x13):
+            self.gradient_matrix = Matrix(stream)
+            if fill_style_type == 0x13:
+                self.gradient = FocalGradient(stream,calling_tag)
+            else:
+                self.gradient = Gradient(stream,calling_tag)
+        if fill_style_type in (0x40,0x41,0x42,0x43):
+            self.bitmap_id = stream.read("uintle:16")
+            self.bitmap_matrix = Matrix(stream)
+
+class LineStyleArray(object):
+    def __init__(self,stream,calling_tag):
+        self.line_style_count = stream.read('uintle:8')
+        total = self.line_style_count
+        if self.line_style_count == 0xFF:
+            self.line_style_count_extended = stream.read('uintle:16')
+            total = self.line_style_count_extended
+        self.line_styles = []
+        if calling_tag in ('DefineShape1','DefineShape2','DefineShape3'):
+            linestyle_class = LineStyle
+        else:
+            linestyle_class = LineStyle2
+        for x in xrange(total):
+            self.line_styles.append(linestyle_class(stream,calling_tag))
+
+class LineStyle(object):
+    def __init__(self,stream,calling_tag):
+        self.width = stream.read("uintle:16")
+        if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
+            self.color = Rgb(stream)
+        else:
+            self.color = Rgba(stream)
+
+class LineStyle2(object):
+    def __init__(self,stream,calling_tag):
+        self.width = stream.read("uintle:16")
+        self.start_cap_style = stream.read("uint:2")
+        self.join_style = stream.read("uint:2")
+        self.has_fill_flag = stream.read("bool")
+        self.no_h_scale_flag = stream.read("bool")
+        self.no_v_scale_flag = stream.read("bool")
+        self.pixel_hinting_flag = stream.read("bool")
+        stream.pos += 5
+        self.no_close = stream.read("bool")
+        self.end_cap_style = stream.read("uint:2")
+        if self.join_style == 2:
+            self.miter_limit_factor = Fixed8(stream)
+        if self.has_fill_flag:
+            self.fill_type = FillStyle(stream)
+        else:
+            self.color = Rgba(stream)
+        if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
+            self.color = Rgb(stream)
+        else:
+            self.color = Rgba(stream)
+
+
 # ========
 
 def string(stream):
@@ -262,196 +488,7 @@ def string(stream):
 # ======== Old-style datatype parsing functions
 # ======== that haven't been implemented as classes yet
 
-def gradient(stream,calling_tag):
-    print "SpreadMode",stream.read('uint:2')
-    print "InterpolationMode",stream.read('uint:2')
-    num_gradients = stream.read('uint:4')
-    print "NumGradients:",num_gradients
-    for n in range(0,num_gradients):
-        print "GradientRecords[%d]" % (n+1)
-        print "Ratio:",stream.read('uintle:8')
-        print "Color:"
-        if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
-            print "(%d,%d,%d)" % rgb_color_record(stream)
-        else:
-            print "(%d,%d,%d,%d)" % rgba_color_record(stream)
-    return stream
-
-def focal_gradient(stream,calling_tag):
-    stream = gradient(stream,calling_tag)
-    print "FocalPoint: %d.%d" % fixed_8(stream)
-    return stream
-
-def shape(stream,calling_tag):
-    num_fill_bits = stream.read('uint:4')
-    print "NumFillBits:",num_fill_bits
-    num_line_bits = stream.read('uint:4')
-    print "NumLineBits:",num_line_bits
-    # Now shaperecords.
-    record_type = ''
-    while record_type != 'EndShapeRecord':
-        type_flag = stream.read('uint:1')
-        if type_flag == 0:
-            if stream.peek('uint:5') == 0:
-                record_type = 'EndShapeRecord'
-            else:
-                record_type = 'StyleChangeRecord'
-                print "RecordType: StyleChangeRecord"
-                num_fill_bits,num_line_bits = style_change_record(stream,calling_tag,num_fill_bits,num_line_bits)
-        else:
-            straight_flag = stream.read('uint:1')
-            if straight_flag == 0:
-                record_type = 'CurvedEdgeRecord'
-                curved_edge_record(stream)
-            else:
-                record_type = 'StraightEdgeRecord'
-                straight_edge_record(stream)
-        #print "RecordType:",record_type
-        # EndShapeRecord: type_flag = 0, next 5 bits all 0
-        # StyleChangeRecord: type_flag = 0, at least one of next 5 bits 1.
-        # StraightEdgeRecord: type_flag = 1, next bit = 1
-        # CurvedEdgeRecord: type_flat = 1, next bit = 0.
-
 def shape_with_style(stream,calling_tag):
     stream = fill_style_array(stream,calling_tag)
     stream = line_style_array(stream,calling_tag)
     shape(stream,calling_tag)
-
-def fill_style_array(stream,calling_tag):
-    # Fill style array!
-    fill_style_count = stream.read('uintle:8')
-    print "FillStyleCount:",fill_style_count
-    if fill_style_count == 0xff:
-        fill_style_count = stream.read('uintle:16')
-        print "FillStyleCountExtended:",fill_style_count
-    # And the individual FillStyles!
-    for n in range(0,fill_style_count):
-        print "FillStyle[%d]" % (n+1)
-        fill_style(stream,calling_tag)
-    return stream
-
-def fill_style(stream,calling_tag):
-    fill_style_type = stream.read("uintle:8")
-    print "FillStyleType",fill_style_type
-    if fill_style_type == 0x00:
-        print "Color:"
-        if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
-            print "(%d,%d,%d)" % rgb_color_record(stream)
-        else:
-            print "(%d,%d,%d,%d)" % rgba_color_record(stream)
-    if fill_style_type in (0x10,0x12,0x13):
-        print "GradientMatrix:"
-        stream = matrix(stream)
-        print "Gradient:"
-        if fill_style_type == 0x13:
-            stream = focal_gradient(stream,calling_tag)
-        else:
-            stream = gradient(stream,calling_tag)
-    if fill_style_type in (0x40,0x41,0x42,0x43):
-        print "BitmapId:",stream.read("uintle:16")
-        print "BitmapMatrix:"
-        stream = matrix(stream)
-
-def line_style_array(stream,calling_tag):
-    # Line style array!
-    line_style_count = stream.read('uintle:8')
-    print "LineStyleCount:",line_style_count
-    if line_style_count == 0xff:
-        line_style_count = stream.read('uintle:16')
-        print "LineStyleCountExtended:",line_style_count
-    for n in range(0,line_style_count):
-        if calling_tag in ("DefineShape","DefineShape2","DefineShape3"):
-            # LineStyle!
-            print "LineStyle[%d]" % (n+1)
-            print "Width:",stream.read('uintle:16')
-            print "Color:"
-            if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
-                print "(%d,%d,%d)" % rgb_color_record(stream)
-            else:
-                print "(%d,%d,%d,%d)" % rgba_color_record(stream)
-        elif calling_tag == "DefineShape4":
-            #LineStyle2!
-            print "LineStyle2[%d]" % (n+1)
-            print "StartCapStyle:",stream.read('uintle:2')
-            join_style = stream.read('uintle:2')
-            print "JoinStyle:",join_style
-            has_fill_flag = stream.read('bool')
-            print "HasFillFlag:",has_fill_flag
-            print "NoHScaleFlag:",stream.read('bool')
-            print "NoVScaleFlag:",stream.read('bool')
-            print "PixelHintingFlag:",stream.read('bool')
-            stream.pos += 5
-            print "NoClose:",stream.read('bool')
-            print "EndCapStyle:",stream.read('uintle:2')
-            if join_style == 2:
-                miter_limit_factor = datatype.fixed_8(stream)
-            if has_fill_flag:
-                fill_style(stream,calling_tag)
-            else:
-                print "Color:"
-                print "(%d,%d,%d,%d)" % rgba_color_record(stream)
-    return stream
-
-def style_change_record(stream,calling_tag,num_fill_bits,num_line_bits):
-    #if calling_tag == "DefineShape2" or calling_tag == "DefineShape3":
-    state_new_styles = stream.read('bool')
-    print "StateNewStyles:",state_new_styles
-    state_line_style = stream.read('bool')
-    print "StateLineStyle:",state_line_style
-    state_fill_style_1 = stream.read('bool')
-    state_fill_style_0 = stream.read('bool')
-    print "StateFillStyles - 0:",state_fill_style_0,", 1:",state_fill_style_1
-    state_move_to = stream.read('bool')
-    print "StateMoveTo:",state_move_to
-    if state_move_to:
-        move_bits = stream.read('uint:5')
-        move_bits_format = 'int:%d' % move_bits
-        move_delta_x = stream.read(move_bits_format)
-        move_delta_y = stream.read(move_bits_format)
-        print "MoveDelta:",(move_delta_x,move_delta_y)
-    # TODO: Are we getting FillBits and LineBits from the original Shape parsing? (Yes.)
-    if num_fill_bits > 0:
-        fill_bits_format = 'uint:%d' % num_fill_bits
-        if state_fill_style_0:
-            print "FillStyle0:",stream.read(fill_bits_format)
-        if state_fill_style_1:
-            print "FillStyle1:",stream.read(fill_bits_format)
-    line_bits_format = 'uint:%d' % num_line_bits
-    if state_line_style and num_line_bits > 0:
-        print "LineStyle:",stream.read(line_bits_format)
-    stream.bytealign()
-    if state_new_styles: # and calling_tag != "DefineShape":
-        stream = fill_style_array(stream,calling_tag)
-        stream = line_style_array(stream,calling_tag)
-        num_fill_bits = stream.read('uint:4')
-        print "NumFillBits:",num_fill_bits
-        num_line_bits = stream.read('uint:4')
-        print "NumLineBits:",num_line_bits
-    return num_fill_bits,num_line_bits
-
-def straight_edge_record(stream):
-    num_bits = stream.read('uint:4')
-    print "NumBits:",num_bits
-    num_bits_format = 'int:%d' % (num_bits+2)
-    general_line_flag = stream.read('bool')
-    if general_line_flag:
-        print "DeltaX:",stream.read(num_bits_format)
-        print "DeltaY:",stream.read(num_bits_format)
-    else:
-        vert_line_flag = stream.read('bool')
-        if vert_line_flag:
-            print "DeltaY:",stream.read(num_bits_format)
-        else:
-            print "DeltaX:",stream.read(num_bits_format)
-    # NB: this is really badly documented in the specs.
-    # I'm going by the worked example on page 266 of the v10 spec,
-    # which is closer to what the comments for STRAIGHTEDGERECORD say
-    # than what the value column actually says.
-
-def curved_edge_record(stream):
-    num_bits = stream.read('uint:4')
-    num_bits_format = 'int:%d' % (num_bits+2)
-    print "ControlDeltaX:",stream.read(num_bits_format)
-    print "ControlDeltaY:",stream.read(num_bits_format)
-    print "AnchorDeltaX:",stream.read(num_bits_format)
-    print "AnchorDeltaY:",stream.read(num_bits_format)
