@@ -382,7 +382,30 @@ class FrameLabel(Tag):
         print "Is NamedAnchor:",self.is_named_anchor
 
 class SoundStreamHead2(Tag):
-    pass
+    def parse(self,stream):
+        stream.pos += 4
+        self.playback_sound_rate = stream.read('uint:2')
+        self.playback_sound_size = stream.read('uint:1')
+        self.playback_sound_type = stream.read('uint:1')
+        self.stream_sound_compression = stream.read('uint:4')
+        self.stream_sound_rate = stream.read('uint:2')
+        self.stream_sound_size = stream.read('uint:1')
+        self.stream_sound_type = stream.read('uint:1')
+        self.stream_sound_sample_count = stream.read('uintle:16')
+        if self.stream_sound_compression == 2:
+            self.latency_seek = stream.read('intle:16')
+
+    def display(self):
+        print "PlaybackSoundRate:",self.playback_sound_rate
+        print "PlaybackSoundSize:",self.playback_sound_size
+        print "PlaybackSoundType:",self.playback_sound_type
+        print "StreamSoundCompression:",self.stream_sound_compression
+        print "StreamSoundRate:",self.stream_sound_rate
+        print "StreamSoundSize:",self.stream_sound_size
+        print "StreamSoundType:",self.stream_sound_type
+        print "StreamSoundSampleCount:",self.stream_sound_sample_count
+        if self.stream_sound_compression == 2:
+            print "LatencySeek:",self.latency_seek
 
 class DefineMorphShape(Tag):
     pass
@@ -414,7 +437,23 @@ class EnableDebugger(Tag):
         self.password_hash = datatypes.string(stream)
 
 class DoInitAction(Tag):
-    pass
+    def parse(self,stream):
+        self.sprite_id = stream.read('uintle:16')
+        self.actions = []
+        while stream.peek('uintle:8') != 0:
+            action_code = stream.read('uintle:8')
+            action_length = 0
+            if action_code > 0x7F:
+                action_length = stream.read('uintle:16')
+            action_stream = stream.read('bits:{0}'.format(action_length*8))
+            self.actions.append(ActionFactory.new_action(action_stream,
+                                                         action_code,
+                                                         action_length))        
+
+    def display(self):
+        for i, action in enumerate(self.actions):
+            print "  == Action {0}: {1} ==".format(i,action.__class__.__name__)
+            action.display()
 
 class DefineVideoStream(Tag):
     def parse(self,stream):
@@ -509,10 +548,13 @@ class SymbolClass(Tag):
             self.symbols.append(new_symbol)
 
 class Metadata(Tag):
-    pass
+    def parse(self,stream):
+        self.metadata = datatypes.string(stream)
 
 class DefineScalingGrid(Tag):
-    pass
+    def parse(self,stream):
+        self.character_id = stream.read('uintle:16')
+        self.splitter = datatypes.Rect(stream)
 
 class DoABC(Tag):
     pass
@@ -524,7 +566,20 @@ class DefineMorphShape2(Tag):
     pass
 
 class DefineSceneAndFrameLabelData(Tag):
-    pass
+    def parse(self,stream):
+        self.scene_count = datatypes.EncodedU32(stream)
+        self.scenes = []
+        for x in xrange(0,scene_count):
+            offset_data = {'offset' : datatypes.EncodedU32(stream),
+                           'name' : datatypes.string(stream) }
+            self.scenes.append(offset_data)
+        self.frame_label_count = datatypes.EncodedU32(stream)
+        self.frame_labels = []
+        for x in xrange(0,scene_count):
+            label_data = {'frame_number' : datatypes.EncodedU32(stream),
+                          'frame_label' : datatypes.string(stream) }
+            self.frame_labels.append(label_data)
+        
 
 class DefineBinaryData(Tag):
     pass

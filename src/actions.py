@@ -876,7 +876,7 @@ class ActionJump(Action):
 
 class ActionGetURL2(Action):
     def parse(self,stream):
-        self.send_vars_method = stream.read('uintle:2')
+        self.send_vars_method = stream.read('uint:2')
         stream.pos += 4
         self.load_target_flag = stream.read('bool')
         self.load_variables_flag = stream.read('bool')

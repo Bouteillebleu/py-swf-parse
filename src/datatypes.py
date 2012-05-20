@@ -44,6 +44,19 @@ class Fixed(object):
     def __str__(self):
         return "{0}.{1}".format(self.high,self.low)
 
+class EncodedU32(object):
+    def __init__(self,stream):
+        self.value = 0
+        for byte in xrange(0,5):
+            last_byte = stream.read('bool')
+            byte_content = stream.read('uint:7')
+            self.value += byte_content * math.pow(2,7*byte)
+            if last_byte:
+                break
+                
+    def __str__(self):
+        return "{0}".format(self.value)
+
 class Rgb(object):
     def __init__(self,stream):
         self.r = stream.read('uintle:8')
@@ -240,106 +253,14 @@ class ClipEventFlags(object):
 
 def string(stream):
     # Not a new class; produces a Python 2.x string.
-    new_string = ''
+    new_string = []
     while stream.peek('uintle:8') != 0:
-        new_string += stream.read('bytes:1')
+        new_string.append(stream.read('bytes:1'))
     stream.bytepos += 1 # Ignore the final 0 in the string.
-    return new_string
+    return ''.join(new_string)
 
-# ========
-
-def rgb_color_record(stream):
-    # Data should be 3 bytes long: R, G and B values, each read as UI8.
-    r = stream.read('uintle:8')
-    g = stream.read('uintle:8')
-    b = stream.read('uintle:8')
-    return r,g,b
-
-def rgba_color_record(stream):
-    r = stream.read('uintle:8')
-    g = stream.read('uintle:8')
-    b = stream.read('uintle:8')
-    a = stream.read('uintle:8')
-    return r,g,b,a
-
-def fixed_8(stream):
-    low = stream.read('uintle:8')
-    high = stream.read('uintle:8')
-    return high,low
-
-def fixed(stream):
-    low = stream.read('uintle:16')
-    high = stream.read('uintle:16')
-    return high,low
-
-def rect(stream):
-    # Read the Nbits field - the first 5 bits - to find the size of the next ones.
-    nbits = stream.read('uint:5')
-    print "nBits:",nbits
-    nbits_format = 'int:%d' % nbits
-    print "Xmin:",stream.read(nbits_format)
-    print "Xmax:",stream.read(nbits_format)
-    print "Ymin:",stream.read(nbits_format)
-    print "Ymax:",stream.read(nbits_format)
-    stream.bytealign()
-
-def matrix(stream):
-    has_scale = stream.read('bool') #(1 << 7) & start_byte
-    if has_scale:
-        n_scale = stream.read('uint:5') #(start_byte >> 2) & 0x1F
-        print "nScaleBits:",n_scale
-        scale_format = 'uint:%d' % n_scale
-        print "ScaleX:",stream.read(scale_format) # Not strictly a uint
-        print "ScaleY:",stream.read(scale_format) # they're actually 16.16 fixed-point
-    has_rotate = stream.read('bool')
-    if has_rotate:
-        n_rotate_bits = stream.read('uint:5')
-        print "nRotateBits:",n_rotate_bits
-        rotate_format = 'uint:%d' % n_rotate_bits
-        print "RotateSkew0:",stream.read(rotate_format) # as are these - so I'll have to sort
-        print "RotateSkew1:",stream.read(rotate_format) # the fixed-point stuff out later.
-    n_translate_bits = stream.read('uint:5')
-    print "nTranslateBits:",n_translate_bits
-    if n_translate_bits > 0:
-        translate_format = 'int:%d' % n_translate_bits
-        print "TranslateX:",stream.read(translate_format) # Basically I need to write my own thing
-        print "TranslateY:",stream.read(translate_format) # to turn however-many-bits into fixed-point.
-    stream.bytealign()
-    return stream
-
-def cxform(stream):
-    has_add_terms = stream.read('bool')
-    has_mult_terms = stream.read('bool')
-    n_bits = stream.read('uint:4')
-    n_bits_format = 'int:%d' % n_bits
-    if has_mult_terms:
-        print "RedMultTerm:",stream.read(n_bits_format)
-        print "GreenMultTerm:",stream.read(n_bits_format)
-        print "BlueMultTerm:",stream.read(n_bits_format)
-    if has_add_terms:
-        print "RedAddTerm:",stream.read(n_bits_format)
-        print "GreenAddTerm:",stream.read(n_bits_format)
-        print "BlueAddTerm:",stream.read(n_bits_format)
-    stream.bytealign()
-    return stream
-
-def cxform_with_alpha(stream):
-    has_add_terms = stream.read('bool')
-    has_mult_terms = stream.read('bool')
-    n_bits = stream.read('uint:4')
-    n_bits_format = 'int:%d' % n_bits
-    if has_mult_terms:
-        print "RedMultTerm:",stream.read(n_bits_format)
-        print "GreenMultTerm:",stream.read(n_bits_format)
-        print "BlueMultTerm:",stream.read(n_bits_format)
-        print "AlphaMultTerm:",stream.read(n_bits_format)
-    if has_add_terms:
-        print "RedAddTerm:",stream.read(n_bits_format)
-        print "GreenAddTerm:",stream.read(n_bits_format)
-        print "BlueAddTerm:",stream.read(n_bits_format)
-        print "AlphaAddTerm:",stream.read(n_bits_format)
-    stream.bytealign()
-    return stream
+# ======== Old-style datatype parsing functions
+# ======== that haven't been implemented as classes yet
 
 def gradient(stream,calling_tag):
     print "SpreadMode",stream.read('uint:2')
@@ -534,90 +455,3 @@ def curved_edge_record(stream):
     print "ControlDeltaY:",stream.read(num_bits_format)
     print "AnchorDeltaX:",stream.read(num_bits_format)
     print "AnchorDeltaY:",stream.read(num_bits_format)
-
-def record_header(stream):
-    header = stream.read('uintle:16')
-    is_long_header = False
-    tag_type = header >> 6 # Ignore the bottom 6 bits
-    tag_length = header & 0x3F # Only keep the bottom 6 bits
-    if tag_length == 0x3f:
-        # If it's actually 63, we're using the long record header form instead.
-        is_long_header = True
-        tag_length = stream.read('intle:32')
-    tag_type_name = get_tag_type_name_from_number(tag_type)
-    return tag_type_name, tag_length, is_long_header
-
-def get_tag_type_name_from_number(number):
-    tags = {0:  "End",
-            1:  "ShowFrame",
-            2:  "DefineShape",
-            4:  "PlaceObject",
-            5:  "RemoveObject",
-            6:  "DefineBits",
-            7:  "DefineButton", # can contain actionrecords
-            8:  "JPEGTables",
-            9:  "SetBackgroundColor",
-            10: "DefineFont",
-            11: "DefineText",
-            12: "DoAction", # can contain actionrecords
-            13: "DefineFontInfo",
-            14: "DefineSound",
-            15: "StartSound",
-            17: "DefineButtonSound",
-            18: "SoundStreamHead",
-            19: "SoundStreamBlock",
-            20: "DefineBitsLossless",
-            21: "DefineBitsJPEG2",
-            22: "DefineShape2",
-            23: "DefineButtonCxform",
-            24: "Protect",
-            26: "PlaceObject2", # Can contain actionrecords
-            28: "RemoveObject2",
-            32: "DefineShape3",
-            33: "DefineText2",
-            34: "DefineButton2", # can contain actionrecords
-            35: "DefineBitsJPEG3",
-            36: "DefineBitsLossless2",
-            37: "DefineEditText",
-            39: "DefineSprite",
-            43: "FrameLabel",
-            45: "SoundStreamHead2",
-            46: "DefineMorphShape",
-            48: "DefineFont2",
-            56: "ExportAssets",
-            57: "ImportAssets",
-            58: "EnableDebugger",
-            59: "DoInitAction",
-            60: "DefineVideoStream",
-            61: "VideoFrame",
-            62: "DefineFontInfo2",
-            64: "EnableDebugger2",
-            65: "ScriptLimits",
-            66: "SetTabIndex",
-    # 69: "FileAttributes",
-    # 70: "PlaceObject3",
-    # 71: "ImportAssets2",
-    # 73: "DefineFontAlignZones",
-    # 74: "CSMTextSettings",
-    # 75: "DefineFont3",
-    # 76: "SymbolClass",
-    # 77: "Metadata",
-    # 78: "DefineScalingGrid",
-    # 82: "DoABC",
-    # 83: "DefineShape4",
-    # 84: "DefineMorphShape2",
-    # 86: "DefineSceneAndFrameLabelData",
-    # 87: "DefineBinaryData",
-    # 88: "DefineFontName",
-    # 89: "StartSound2",
-    # 90: "DefineBitJPEG4",
-    # 91: "DefineFont4"
-    # 73 is DefineFontAlignZones, allegedly v8 or later.
-    # 74 is CSMTextSettings, also v8 or later.
-    # 75 is DefineFont3, also also v8 or later. Weird.
-    # Worth checking whether their descriptions in the v10 spec match the fields here.
-    }
-    if number in tags:
-        return tags[number]
-    else:
-        return str(number)
