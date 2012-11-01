@@ -11,7 +11,7 @@ class ActionFactory(object):
     def new_action(stream,action_type,action_length):
         action_class = class_from_action_number(action_type)
         if action_class is not None:
-            print "  Creating new action: {0}, length {1}".format(action_class.__name__,action_length)
+            #print "  Creating new action: {0}, length {1}".format(action_class.__name__,action_length)
             return action_class(stream,action_type,action_length)
         else:
             return Action(stream,action_type,action_length)

@@ -92,6 +92,6 @@ class Swf(object):
 if __name__ == "__main__":
     swf_object = Swf(sys.argv[1])
     swf_object.display_header()
-    swf_object.display_tags()
+    #swf_object.display_tags()
     swf_object.included_tags()
 

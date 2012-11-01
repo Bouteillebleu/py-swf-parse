@@ -57,7 +57,12 @@ class ShowFrame(Tag):
         pass
 
 class DefineShape(Tag):
-    pass
+    def parse(self,stream):
+        self.shape_id = stream.read('uintle:16')
+        print "ShapeID:",self.shape_id
+        self.shape_bounds = datatypes.Rect(stream)
+        print "ShapeBounds:",self.shape_bounds
+        self.shape = datatypes.ShapeWithStyle(stream,'DefineShape')
 
 class PlaceObject(Tag):
     def parse(self,stream):
@@ -111,6 +116,8 @@ class DefineFont(Tag):
             print "glyph",glyph_number,"offset =",self.offset_table[-1]
         for glyph_number in xrange(self.n_glyphs):
             pass
+            # TODO: Either DefineFont or Shape and its offshoots are wrong.
+            # DefineFont at the moment reads off the end of the stream.
             #stream.bytepos = starting_bytepos + self.offset_table[glyph_number]
             #self.glyph_shape_table.append(datatypes.Shape(stream,"DefineFont"))
 
