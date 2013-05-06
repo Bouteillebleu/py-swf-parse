@@ -47,6 +47,7 @@ class Swf(object):
         
     def parse_tags(self):
         self.tags = []
+        self.dictionary = {}
         current_tag_type = -1
         while current_tag_type != 0:
             tag_header = self._bitstream.read('uintle:16')
@@ -63,6 +64,17 @@ class Swf(object):
                                          current_tag_type,
                                          current_tag_length)
             self.tags.append(new_tag)
+            if hasattr(new_tag,'character_id'):
+                print "A NEW DICTIONARY ENTRY (not nested)"
+                self.dictionary[new_tag.character_id] = {'nested': False,
+                                                         'num': len(self.tags)-1}
+            elif hasattr(new_tag,'tags'):
+                for t in new_tag.tags:
+                    if hasattr(t,'character_id'):
+                        print "A NEW DICTIONARY ENTRY (nested)"
+                        self.dictionary[t.character_id]={'nested': True,
+                                                         'num':len(new_tag.tags)-1,
+                                                         'parent_num':len(self.tags)-1}
             
     def display_tags(self):
         for i, tag in enumerate(self.tags):
@@ -86,6 +98,21 @@ class Swf(object):
             else:
                 print "  parser implemented"
         
+    def display_dictionary(self):
+        if len(self.dictionary.keys()) == 0:
+            print "Dictionary currently empty."
+        else:
+            for char_id in sorted(self.dictionary.keys()):
+                if self.dictionary[char_id]['nested']:
+                    print "CharacterID {0}: {1}, tag {2} in {3}, tag {4}".format(char_id,
+                        self.tags[self.dictionary[char_id]['parent_num']].tags[self.dictionary[char_id]['num']].__class__.__name__,
+                        self.dictionary[char_id]['num'],
+                        self.tags[self.dictionary[char_id]['parent_num']].__class__.__name__,
+                        self.dictionary[char_id]['parent_num'])
+                else:
+                    print "CharacterID {0}: {1}, tag {2}".format(char_id,
+                        self.tags[self.dictionary[char_id]['num']].__class__.__name__,
+                        self.dictionary[char_id]['num'])
 
 # ========
 
@@ -93,5 +120,5 @@ if __name__ == "__main__":
     swf_object = Swf(sys.argv[1])
     swf_object.display_header()
     #swf_object.display_tags()
-    swf_object.included_tags()
-
+    swf_object.display_dictionary()
+    #swf_object.included_tags()
