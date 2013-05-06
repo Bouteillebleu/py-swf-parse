@@ -500,7 +500,7 @@ class DefineFontInfo2(Tag):
 
 class EnableDebugger2(Tag):
     def parse(self,stream):
-        self.pos += 16
+        stream.pos += 16
         self.password_hash = datatypes.string(stream)
 
 class ScriptLimits(Tag):
@@ -545,7 +545,7 @@ class PlaceObject3(Tag):
 class ImportAssets2(Tag):
     def parse(self,stream):
         self.url = datatypes.string(stream)
-        self.pos += 16
+        stream.pos += 16
         count = stream.read('uintle:16')
         self.assets = []
         for x in range(0,count):
