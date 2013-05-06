@@ -39,6 +39,9 @@ class Tag(object):
             print "Display function not implemented."
         else:
             print "Parser not implemented."
+    
+    def tag_type(self):
+        return tag_data[self.type]['class']
 
 # ==== Individual tags ====
 
