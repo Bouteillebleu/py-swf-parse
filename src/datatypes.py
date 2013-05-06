@@ -506,7 +506,17 @@ class LineStyle2(object):
         else:
             self.color = Rgba(stream)
 
-
+class KerningRecord(object):
+    def __init__(self,stream,font_flags_wide_codes):
+        if font_flags_wide_codes:
+            self.font_kerning_code_1 = stream.read('uintle:16')
+            self.font_kerning_code_2 = stream.read('uintle:16')
+        else:
+            self.font_kerning_code_1 = stream.read('uintle:8')
+            self.font_kerning_code_2 = stream.read('uintle:8')
+        self.font_kerning_adjustment = stream.read('intle:16')
+            
+            
 # ========
 
 def string(stream):

@@ -554,13 +554,73 @@ class ImportAssets2(Tag):
             self.assets.append(new_asset)
 
 class DefineFontAlignZones(Tag):
-    pass
+    def parse(self,stream):
+        self.font_id = stream.read('uintle:16')
+        self.csm_table_hint = stream.read('uint:2')
+        stream.pos += 6
+        # TODO: Use font_id to find the relevant DefineFont3 tag.
+        # Then check GlyphCount from that.
+        # Until we have GlyphCount, we can't do anything else with this.
+        # ZoneRecords contain ZoneData, ZoneData contains FLOAT16s
+        # (half-precision floats) which bitstring won't parse automatically.
 
 class CSMTextSettings(Tag):
-    pass
+    def parse(self,stream):
+        self.text_id = stream.read('uintle:16')
+        self.use_flash_type = stream.read('int:2')
+        self.grid_fit = stream.read('int:3')
+        stream.pos += 3
+        self.thickness = stream.read('floatle:32')
+        self.sharpness = stream.read('floatle:32')
+        # TODO: last 8 bits should all be 0.        
 
 class DefineFont3(Tag):
-    pass
+    def parse(self,stream):
+        self.font_id = stream.read('uintle:16')
+        self.font_flags_has_layout = stream.read('bool')
+        self.font_flags_shiftJIS = stream.read('bool')
+        self.font_flags_small_text = stream.read('bool')
+        self.font_flags_ansi = stream.read('bool')
+        self.font_flags_wide_offsets = stream.read('bool')
+        self.font_flags_wide_codes = stream.read('bool')
+        self.font_flags_italic = stream.read('bool')
+        self.font_flags_bold = stream.read('bool')
+        self.language_code = stream.read('uintle:8') # TODO: enum?
+        self.font_name_len = stream.read('uintle:8')
+        self.font_name = [] # TODO: wtf
+        for x in range(0,self.font_name_len):
+            self.font_name.append(stream.read('uintle:8'))
+        self.num_glyphs = stream.read('uintle:16')
+        self.offset_table = []
+        if self.font_flags_wide_offsets:
+            for x in range(0,self.num_glyphs):
+                self.offset_table.append(stream.read('uintle:32'))
+            self.code_table_offset = stream.read('uintle:32')
+        else:
+            for x in range(0,self.num_glyphs):
+                self.offset_table.append(stream.read('uintle:16'))
+            self.code_table_offset = stream.read('uintle:16')
+        self.glyph_shape_table = []
+        for x in range(0,self.num_glyphs):
+            pass # TODO: parse shapes, "same as in DefineFont"
+        self.code_table = []
+        for x in range(0,self.num_glyphs):
+            self.code_table.append(stream.read('uintle:16'))
+        if self.font_flags_has_layout:
+            self.font_ascent = stream.read('uintle:16')
+            self.font_descent = stream.read('uintle:16')
+            self.font_leading = stream.read('intle:16')
+            self.font_advance_table = []
+            for x in range(0,self.num_glyphs):
+                self.font_advance_table.append(stream.read('intle:16'))
+            self.font_bounds_table = []
+            for x in range(0,self.num_glyphs):
+                self.font_bounds_table.append(datatypes.Rect(stream))
+            self.kerning_count = stream.read('uintle:16')
+            self.font_kerning_table = []
+            for x in range(0,self.kerning_count):
+                self.font_kerning_table.append(datatypes.KerningRecord(stream,
+                                               self.font_flags_wide_codes))
 
 class SymbolClass(Tag):
     def parse(self,stream):
@@ -584,7 +644,16 @@ class DoABC(Tag):
     pass
 
 class DefineShape4(Tag):
-    pass
+    def parse(self,stream):
+        self.shape_id = stream.read('uintle:16')
+        self.shape_bounds = datatypes.Rect(stream)
+        self.edge_bounds = datatypes.Rect(stream)
+        stream.pos += 5
+        self.uses_fill_winding_rule = stream.read('bool')
+        self.uses_non_scaling_strokes = stream.read('bool')
+        self.uses_scaling_strokes = stream.read('bool')
+        # TODO: self.shapes = SHAPEWITHSTYLE
+        
 
 class DefineMorphShape2(Tag):
     pass
