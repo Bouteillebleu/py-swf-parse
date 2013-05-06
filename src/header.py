@@ -1,7 +1,7 @@
 # "D:/Coding/sim_original_test.swf"
 # First go - using http://the-labs.com/MacromediaFlash/SWF-Spec/SWFfileformat.html as guide.
 import sys, os, zlib
-import tag_parsers
+import tags
 import datatypes
 from bitstring import ConstBitStream
 
