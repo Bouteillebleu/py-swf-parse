@@ -7,13 +7,14 @@ import os
 import struct
 from actions import ActionFactory
 import datatypes
+from log import log
 
 class TagFactory(object):
     @staticmethod
     def new_tag(swf_version,stream,tag_type,tag_length):
         tag_class = class_from_tag_number(tag_type)
         if tag_class is not None:
-            print "  Creating new tag: {0}, length {1}".format(tag_class.__name__,tag_length)
+            log("==Creating new tag: {0}, length {1}==".format(tag_class.__name__,tag_length))
             return tag_class(swf_version,stream,tag_type,tag_length)
         else:
             return Tag(swf_version,stream,tag_type,tag_length)
@@ -36,12 +37,16 @@ class Tag(object):
     
     def display(self):
         if self.parser_implemented:
-            print "Display function not implemented."
+            log("Display function not implemented.")
         else:
-            print "Parser not implemented."
+            log("Parser not implemented.")
     
     def tag_type(self):
         return tag_data[self.type]['class']
+        
+    # TODO: Add some output for the bit contents of the stream.
+    # TODO: Check - is the stream for one of these the stream of the entire file, 
+    # or just the bits in this particular tag? It really ought to be the first.
 
 # ==== Individual tags ====
 
@@ -62,9 +67,9 @@ class ShowFrame(Tag):
 class DefineShape(Tag):
     def parse(self,stream):
         self.shape_id = stream.read('uintle:16')
-        print "ShapeID:",self.shape_id
+        log("ShapeID: {s}".format(s=self.shape_id))
         self.shape_bounds = datatypes.Rect(stream)
-        print "ShapeBounds:",self.shape_bounds
+        log("ShapeBounds: {s}".format(s=self.shape_bounds))
         self.shape = datatypes.ShapeWithStyle(stream,'DefineShape')
 
 class PlaceObject(Tag):
@@ -75,10 +80,10 @@ class PlaceObject(Tag):
         self.color_transform = datatypes.Cxform(stream)
     
     def display(self):
-        print "CharacterId:",self.character_id
-        print "Depth:",self.depth
-        print "Matrix:",self.matrix
-        print "ColorTransform:",self.color_transform
+        log("CharacterId: {s}".format(s=self.character_id))
+        log("Depth: {s}".format(s=self.depth))
+        log("Matrix: {s}".format(s=self.matrix))
+        log("ColorTransform: {s}".format(s=self.color_transform))
 
 class RemoveObject(Tag):
     def parse(self,stream):
@@ -86,8 +91,8 @@ class RemoveObject(Tag):
         self.depth = stream.read('uintle:16')
     
     def display(self):
-        print "CharacterId:",self.character_id
-        print "Depth:",self.depth
+        log("CharacterId: {s}".format(s=self.character_id))
+        log("Depth: {s}".format(s=self.depth))
 
 class DefineBits(Tag):
     pass
@@ -103,20 +108,21 @@ class SetBackgroundColor(Tag):
         self.background_color = datatypes.Rgb(stream)
     
     def display(self):
-        print "BackgroundColor:",self.background_color
+        log("BackgroundColor: {s}".format(s=self.background_color))
 
 class DefineFont(Tag):
     def parse(self,stream):
-        print "stream length =",len(stream)/8
+        log("DEBUG: stream length = {s} bytes".format(s=(len(stream)/8)))
         self.font_id = stream.read('uintle:16')
         starting_bytepos = stream.bytepos
-        print "starting bytepos =",starting_bytepos
+        log("DEBUG: starting bytepos = {s}".format(s=starting_bytepos))
         self.n_glyphs = stream.peek('uintle:16') / 2
         self.offset_table = []
         self.glyph_shape_table = []
         for glyph_number in xrange(self.n_glyphs):
             self.offset_table.append(stream.read('uintle:16'))
-            print "glyph",glyph_number,"offset =",self.offset_table[-1]
+            log("glyph {g}, offset = {s}".format(g=glyph_number,
+                                                 s=self.offset_table[-1]))
         for glyph_number in xrange(self.n_glyphs):
             pass
             # TODO: Either DefineFont or Shape and its offshoots are wrong.
@@ -142,7 +148,7 @@ class DoAction(Tag):
 
     def display(self):
         for i, action in enumerate(self.actions):
-            print "  == Action {0}: {1} ==".format(i,action.__class__.__name__)
+            log("== Action {0}: {1} ==".format(i,action.__class__.__name__))
             action.display()
 
 
@@ -173,16 +179,16 @@ class SoundStreamHead(Tag):
             self.latency_seek = stream.read('intle:16')
 
     def display(self):
-        print "PlaybackSoundRate:",self.playback_sound_rate
-        print "PlaybackSoundSize:",self.playback_sound_size
-        print "PlaybackSoundType:",self.playback_sound_type
-        print "StreamSoundCompression:",self.stream_sound_compression
-        print "StreamSoundRate:",self.stream_sound_rate
-        print "StreamSoundSize:",self.stream_sound_size
-        print "StreamSoundType:",self.stream_sound_type
-        print "StreamSoundSampleCount:",self.stream_sound_sample_count
+        log("PlaybackSoundRate: {s}".format(s=self.playback_sound_rate))
+        log("PlaybackSoundSize: {s}".format(s=self.playback_sound_size))
+        log("PlaybackSoundType: {s}".format(s=self.playback_sound_type))
+        log("StreamSoundCompression: {s}".format(s=self.stream_sound_compression))
+        log("StreamSoundRate: {s}".format(s=self.stream_sound_rate))
+        log("StreamSoundSize: {s}".format(s=self.stream_sound_size))
+        log("StreamSoundType: {s}".format(s=self.stream_sound_type))
+        log("StreamSoundSampleCount: {s}".format(s=self.stream_sound_sample_count))
         if self.stream_sound_compression == 2:
-            print "LatencySeek:",self.latency_seek
+            log("LatencySeek: {s}".format(s=self.latency_seek))
 
 class SoundStreamBlock(Tag):
     pass
@@ -202,8 +208,8 @@ class DefineButtonCxform(Tag):
         self.button_color_transform = datatypes.Cxform(stream)
     
     def display(self):
-        print "ButtonId:",self.button_id
-        print "ButtonColorTransform:",self.button_color_transform
+        log("ButtonId: {s}".format(s=self.button_id))
+        log("ButtonColorTransform: {s}".format(s=self.button_color_transform))
 
 class Protect(Tag):
     def parse(self,stream):
@@ -237,36 +243,36 @@ class PlaceObject2(Tag):
             self.clip_actions = datatypes.ClipActions(stream,self.swf_version)
 
     def display(self):
-        print "FlagHasClipActions:",self.has_clip_actions
-        print "FlagHasClipDepth:",self.has_clip_depth
-        print "FlagHasName:",self.has_name
-        print "FlagHasRatio:",self.has_ratio
-        print "FlagHasColorTransform:",self.has_color_transform
-        print "FlagHasMatrix:",self.has_matrix
-        print "FlagHasCharacter:",self.has_character
-        print "FlagMove:",self.move
-        print "Depth:",self.depth
+        log("FlagHasClipActions: {s}".format(s=self.has_clip_actions))
+        log("FlagHasClipDepth: {s}".format(s=self.has_clip_depth))
+        log("FlagHasName: {s}".format(s=self.has_name))
+        log("FlagHasRatio: {s}".format(s=self.has_ratio))
+        log("FlagHasColorTransform: {s}".format(s=self.has_color_transform))
+        log("FlagHasMatrix: {s}".format(s=self.has_matrix))
+        log("FlagHasCharacter: {s}".format(s=self.has_character))
+        log("FlagMove: {s}".format(s=self.move))
+        log("Depth: {s}".format(s=self.depth))
         if self.has_character:
-            print "CharacterId:",self.character_id
+            log("CharacterId: {s}".format(s=self.character_id))
         if self.has_matrix:
-            print "Matrix:",self.matrix
+            log("Matrix: {s}".format(s=self.matrix))
         if self.has_color_transform:
-            print "ColorTransform:",self.color_transform
+            log("ColorTransform: {s}".format(s=self.color_transform))
         if self.has_ratio:
-            print "Ratio:",self.ratio
+            log("Ratio: {s}".format(s=self.ratio))
         if self.has_name:
-            print "Name:",self.name
+            log("Name: {s}".format(s=self.name))
         if self.has_clip_depth:
-            print "ClipDepth:",self.clip_depth
+            log("ClipDepth: {s}".format(s=self.clip_depth))
         if self.has_clip_actions:
-            print "ClipActions:",self.clip_actions
+            log("ClipActions: {s}".format(s=self.clip_actions))
 
 class RemoveObject2(Tag):
     def parse(self,stream):
         self.depth = stream.read('uintle:16')
     
     def display(self):
-        print "Depth:",self.depth
+        log("Depth: {s}".format(s=self.depth))
 
 class DefineShape3(Tag):
     pass
@@ -324,43 +330,43 @@ class DefineEditText(Tag):
             self.initial_text = datatypes.string(stream)
 
     def display(self):
-        print "CharacterId:",self.character_id
-        print "Bounds:",self.bounds
-        print "HasText:",self.has_text
-        print "WordWrap:",self.word_wrap
-        print "Multiline:",self.multiline
-        print "Password:",self.password
-        print "ReadOnly:",self.read_only
-        print "HasTextColor:",self.has_text_color
-        print "HasMaxLength:",self.has_max_length
-        print "HasFont:",self.has_font
-        print "HasFontClass:",self.has_font_class
-        print "AutoSize:",self.auto_size
-        print "HasLayout:",self.has_layout
-        print "NoSelect:",self.no_select
-        print "Border:",self.border
-        print "WasStatic:",self.was_static
-        print "HTML:",self.html
-        print "UseOutlines:",self.use_outlines
+        log("CharacterId: {s}".format(s=self.character_id))
+        log("Bounds: {s}".format(s=self.bounds))
+        log("HasText: {s}".format(s=self.has_text))
+        log("WordWrap: {s}".format(s=self.word_wrap))
+        log("Multiline: {s}".format(s=self.multiline))
+        log("Password: {s}".format(s=self.password))
+        log("ReadOnly: {s}".format(s=self.read_only))
+        log("HasTextColor: {s}".format(s=self.has_text_color))
+        log("HasMaxLength: {s}".format(s=self.has_max_length))
+        log("HasFont: {s}".format(s=self.has_font))
+        log("HasFontClass: {s}".format(s=self.has_font_class))
+        log("AutoSize: {s}".format(s=self.auto_size))
+        log("HasLayout: {s}".format(s=self.has_layout))
+        log("NoSelect: {s}".format(s=self.no_select))
+        log("Border: {s}".format(s=self.border))
+        log("WasStatic: {s}".format(s=self.was_static))
+        log("HTML: {s}".format(s=self.html))
+        log("UseOutlines: {s}".format(s=self.use_outlines))
         if self.has_font:
-            print "FontId:",self.font_id
+            log("FontId: {s}".format(s=self.font_id))
         if self.has_font_class:
-            print "FontClass:",self.font_class
+            log("FontClass: {s}".format(s=self.font_class))
         if self.has_font:
-            print "FontHeight:",self.font_height
+            log("FontHeight: {s}".format(s=self.font_height))
         if self.has_text_color:
-            print "TextColor:",self.text_color
+            log("TextColor: {s}".format(s=self.text_color))
         if self.has_max_length:
-            print "MaxLength:",self.max_length
+            log("MaxLength: {s}".format(s=self.max_length))
         if self.has_layout:
-            print "Align:",self.align
-            print "LeftMargin:",self.left_margin
-            print "RightMargin:",self.right_margin
-            print "Indent:",self.indent
-            print "Leading:",self.leading
-        print "VariableName:",self.variable_name
+            log("Align: {s}".format(s=self.align))
+            log("LeftMargin: {s}".format(s=self.left_margin))
+            log("RightMargin: {s}".format(s=self.right_margin))
+            log("Indent: {s}".format(s=self.indent))
+            log("Leading: {s}".format(s=self.leading))
+        log("VariableName: {s}".format(s=self.variable_name))
         if self.has_text:
-            print "InitialText:",self.initial_text
+            log("InitialText: {s}".format(s=self.initial_text))
 
 
 class DefineSprite(Tag):
@@ -377,6 +383,7 @@ class DefineSprite(Tag):
                 # If it's actually 63, use the long record header form instead.
                 current_tag_length = stream.read('intle:32')
             tag_stream = stream.read('bits:{0}'.format(current_tag_length*8))
+            log("Creating nested tag...")
             new_tag = TagFactory.new_tag(self.swf_version,
                                          tag_stream,
                                          current_tag_type,
@@ -384,11 +391,11 @@ class DefineSprite(Tag):
             self.tags.append(new_tag)
     
     def display(self):
-        print "SpriteId:",self.sprite_id
-        print "FrameCount:",self.frame_count
-        print "Sprite contains the following tags:"
+        log("SpriteId: {s}".format(s=self.sprite_id))
+        log("FrameCount: {s}".format(s=self.frame_count))
+        log("Sprite contains the following tags:")
         for i, tag in enumerate(self.tags):
-            print "tag {0}: {1}".format(i,tag.__class__.__name__)
+            log("tag {0}: {1}".format(i,tag.__class__.__name__))
             tag.display()
 
 
@@ -402,8 +409,8 @@ class FrameLabel(Tag):
             self.is_named_anchor = False
     
     def display(self):
-        print "Name:",self.name
-        print "Is NamedAnchor:",self.is_named_anchor
+        log("Name: {s}".format(s=self.name))
+        log("Is NamedAnchor: {s}".format(s=self.is_named_anchor))
 
 class SoundStreamHead2(Tag):
     def parse(self,stream):
@@ -420,16 +427,16 @@ class SoundStreamHead2(Tag):
             self.latency_seek = stream.read('intle:16')
 
     def display(self):
-        print "PlaybackSoundRate:",self.playback_sound_rate
-        print "PlaybackSoundSize:",self.playback_sound_size
-        print "PlaybackSoundType:",self.playback_sound_type
-        print "StreamSoundCompression:",self.stream_sound_compression
-        print "StreamSoundRate:",self.stream_sound_rate
-        print "StreamSoundSize:",self.stream_sound_size
-        print "StreamSoundType:",self.stream_sound_type
-        print "StreamSoundSampleCount:",self.stream_sound_sample_count
+        log("PlaybackSoundRate: {s}".format(s=self.playback_sound_rate))
+        log("PlaybackSoundSize: {s}".format(s=self.playback_sound_size))
+        log("PlaybackSoundType: {s}".format(s=self.playback_sound_type))
+        log("StreamSoundCompression: {s}".format(s=self.stream_sound_compression))
+        log("StreamSoundRate: {s}".format(s=self.stream_sound_rate))
+        log("StreamSoundSize: {s}".format(s=self.stream_sound_size))
+        log("StreamSoundType: {s}".format(s=self.stream_sound_type))
+        log("StreamSoundSampleCount: {s}".format(s=self.stream_sound_sample_count))
         if self.stream_sound_compression == 2:
-            print "LatencySeek:",self.latency_seek
+            log("LatencySeek: {s}".format(s=self.latency_seek))
 
 class DefineMorphShape(Tag):
     pass
@@ -476,7 +483,7 @@ class DoInitAction(Tag):
 
     def display(self):
         for i, action in enumerate(self.actions):
-            print "  == Action {0}: {1} ==".format(i,action.__class__.__name__)
+            log("== Action {0}: {1} ==".format(i,action.__class__.__name__))
             action.display()
 
 class DefineVideoStream(Tag):
@@ -509,8 +516,8 @@ class ScriptLimits(Tag):
         self.script_timeout_seconds = stream.read('uintle:16')
         
     def display(self):
-        print "MaxRecursionDepth:",self.max_recursion_depth
-        print "ScriptTimeoutSeconds:",self.script_timeout_seconds
+        log("MaxRecursionDepth: {s}".format(s=self.max_recursion_depth))
+        log("ScriptTimeoutSeconds: {s}".format(s=self.script_timeout_seconds))
 
 class SetTabIndex(Tag):
     def parse(self,stream):
@@ -518,8 +525,8 @@ class SetTabIndex(Tag):
         self.tab_index = stream.read('uintle:16')
     
     def display(self):
-        print "Depth:",self.depth
-        print "TabIndex:",self.tab_index
+        log("Depth: {s}".format(s=self.depth))
+        log("TabIndex: {s}".format(s=self.tab_index))
 
 class FileAttributes(Tag):
     def parse(self,stream):
@@ -534,10 +541,10 @@ class FileAttributes(Tag):
         stream.bytealign()
     
     def display(self):
-        print "UseDirectBit:",self.use_direct_bit
-        print "UseGPU:",self.use_gpu
-        print "HasMetadata:",self.has_metadata
-        print "UseNetwork:",self.use_network
+        log("UseDirectBit: {s}".format(s=self.use_direct_bit))
+        log("UseGPU: {s}".format(s=self.use_gpu))
+        log("HasMetadata: {s}".format(s=self.has_metadata))
+        log("UseNetwork: {s}".format(s=self.use_network))
 
 class PlaceObject3(Tag):
     pass
@@ -652,7 +659,8 @@ class DefineShape4(Tag):
         self.uses_fill_winding_rule = stream.read('bool')
         self.uses_non_scaling_strokes = stream.read('bool')
         self.uses_scaling_strokes = stream.read('bool')
-        # TODO: self.shapes = SHAPEWITHSTYLE
+        self.shape = datatypes.ShapeWithStyle(stream,'DefineShape4')
+        # TODO: is this actually multiple shapes?
         
 
 class DefineMorphShape2(Tag):
@@ -935,37 +943,37 @@ def class_from_tag_number(number):
 # ========
 
 def define_shape(stream):
-    print "ShapeId:",stream.read('uintle:16')
-    print "ShapeBounds:"
+    log("ShapeId: {s}".format(s=stream.read('uintle:16')))
+    log("ShapeBounds:")
     stream = datatypes.rect(stream)
     datatypes.shape_with_style(stream,"DefineShape")
 
 def define_shape_2(stream):
-    print "ShapeId:",stream.read('uintle:16')
-    print "ShapeBounds:"
+    log("ShapeId: {s}".format(s=stream.read('uintle:16')))
+    log("ShapeBounds:")
     stream = datatypes.rect(stream)
     datatypes.shape_with_style(stream,"DefineShape2")
 
 def define_shape_3(stream):
-    print "ShapeId:",stream.read('uintle:16')
-    print "ShapeBounds:"
+    log("ShapeId: {s}".format(s=stream.read('uintle:16')))
+    log("ShapeBounds:")
     stream = datatypes.rect(stream)
     datatypes.shape_with_style(stream,"DefineShape3")
     
 def define_shape_4(stream):
-    print "ShapeId:",stream.read('uintle:16')
-    print "ShapeBounds:"
+    log("ShapeId: {s}".format(s=stream.read('uintle:16')))
+    log("ShapeBounds:")
     stream = datatypes.rect(stream)
-    print "EdgeBounds:"
+    log("EdgeBounds:")
     stream = datatypes.rect(stream)
     stream.pos += 5
-    print "UsesFillWindingRule:",stream.read('bool')
-    print "UsesNonScalingStrokes:",stream.read('bool')
-    print "UsesScalingStrokes:",stream.read('bool')
+    log("UsesFillWindingRule: {s}".format(s=stream.read('bool')))
+    log("UsesNonScalingStrokes: {s}".format(s=stream.read('bool')))
+    log("UsesScalingStrokes: {s}".format(s=stream.read('bool')))
     datatypes.shape_with_style(stream,"DefineShape4")
     
 def define_text(stream):
-    print "FontId:",stream.read('uintle:16')
+    log("FontId: {s}".format(s=stream.read('uintle:16')))
     starting_bytepos = stream.bytepos
     n_glyphs = stream.peek('uintle:16') / 2
     for glyph_number in range(n_glyphs):
@@ -975,11 +983,11 @@ def define_text(stream):
         datatypes.shape(stream,"DefineText")
 
 def do_init_action(stream):
-    print "SpriteID:",stream.read('uintle:16')
+    log("SpriteID: {s}".format(s=stream.read('uintle:16')))
     action_number = 0
     action_name = ''
     while action_name != 'ActionEndFlag':
-        print "   == Reading action",action_number,"== "
+        log("== Reading action {a} ==".format(a=action_number))
         action_code = stream.read('uintle:8')
         if action_code >= 0x80:
             # If it's actually 63, we're using the long record header form instead.
@@ -987,16 +995,17 @@ def do_init_action(stream):
         else:
             action_length = None
         action_name = datatypes.get_action_type_name_from_number(action_code)
-        print "  Action type:",action_code,action_name
+        log("Action type: {code} {name}".format(code=action_code,
+                                                name=action_name))
         action_number += 1
         if action_length:
-            print "  Action length:",action_length,"bytes"
+            log("Action length: {a} bytes".format(a=action_length))
             action_parser = get_action_parser_from_number(action_code)
             action_parser(stream.read('bits:%d' % (action_length*8)))         
         
 def define_bits_jpeg_2(stream):
     character_id = stream.read('uintle:16')
-    print "Character ID:",character_id
+    log("Character ID: {s}".format(s=character_id))
     filename = "%d.jpeg" % character_id
     if stream.peek(32) == '0xffd9ffd8': # Some SWF versions before 8 erroneously have an extra JPEG EOI and SOI pair before the actual SOI.
         stream.read(32) # In that case, we just throw away the extra 4 bytes.
@@ -1006,7 +1015,7 @@ def define_bits_jpeg_2(stream):
             f.write(struct.pack('b',stream.read('int:8')))
     finally:
         f.close()
-        print "Wrote JPEG data to",filename
+        log("Wrote JPEG data to {s}".format(s=filename))
 
 def define_sprite(stream):
     #print '%r' % data
@@ -1026,7 +1035,7 @@ def define_sprite(stream):
             stream.pos = current_pos + (tag_length*8) + 16
         
 def not_implemented(data):
-    print "No parser for this tag yet."
+    log("No parser for this tag yet.")
     
 # == The list of action parser functions ==
 

@@ -1,7 +1,9 @@
 # "D:/Coding/sim_original_test.swf"
 # First go - using http://the-labs.com/MacromediaFlash/SWF-Spec/SWFfileformat.html as guide.
 import sys, os, zlib
+import argparse
 import datatypes
+from log import log
 from tags import TagFactory, Tag
 from bitstring import ConstBitStream
 
@@ -38,12 +40,12 @@ class Swf(object):
         self.framecount = self._bitstream.read('uintle:16')
 
     def display_header(self):
-        print "Compressed:",self.compressed
-        print "Version:",self.version
-        print "Size:",self.size,"bytes"
-        print "FrameSize:",self.framesize
-        print "FrameRate:",self.framerate
-        print "FrameCount:",self.framecount
+        log("Compressed: {s}".format(s=self.compressed))
+        log("Version: {s}".format(s=self.version))
+        log("Size: {s}".format(s=self.size)),"bytes"
+        log("FrameSize: {s}".format(s=self.framesize))
+        log("FrameRate: {s}".format(s=self.framerate))
+        log("FrameCount: {s}".format(s=self.framecount))
         
     def parse_tags(self):
         self.tags = []
@@ -56,8 +58,8 @@ class Swf(object):
             if current_tag_length == 0x3f:
                 # If it's actually 63, use the long record header form instead.
                 current_tag_length = self._bitstream.read('intle:32')
-            #print "Current tag type:",current_tag_type
-            #print "Current tag length:",current_tag_length
+            #log("Current tag type: {s}".format(s=current_tag_type))
+            #log("Current tag length: {s}".format(s=current_tag_length))
             tag_stream = self._bitstream.read('bits:{0}'.format(current_tag_length*8))
             new_tag = TagFactory.new_tag(self.version,
                                          tag_stream,
@@ -65,59 +67,63 @@ class Swf(object):
                                          current_tag_length)
             self.tags.append(new_tag)
             if hasattr(new_tag,'character_id'):
-                print "A NEW DICTIONARY ENTRY (not nested)"
+                #log("DEBUG: A new dictionary entry (not nested)")
                 self.dictionary[new_tag.character_id] = {'nested': False,
                                                          'num': len(self.tags)-1}
             elif hasattr(new_tag,'tags'):
                 for t in new_tag.tags:
                     if hasattr(t,'character_id'):
-                        print "A NEW DICTIONARY ENTRY (nested)"
+                        #log("DEBUG: A new dictionary entry (nested)")
                         self.dictionary[t.character_id]={'nested': True,
                                                          'num':len(new_tag.tags)-1,
                                                          'parent_num':len(self.tags)-1}
             
     def display_tags(self):
         for i, tag in enumerate(self.tags):
-            print "== Tag {0}: {1} ==".format(i,tag.__class__.__name__)
+            log("== Tag {0}: {1} ==".format(i,tag.__class__.__name__))
             tag.display()
 
     def included_tags(self):
         # This doesn't include tags that are part of DefineSprite.
         # Not yet, at least.
-        print "Tags in this file:"
+        log("Tags in this file:")
         tag_classes = [tag.__class__ for tag in self.tags]
         tag_instances = dict((c, tag_classes.count(c)) for c in tag_classes)
         for tag_class, number in sorted(tag_instances.items(),
                                         key=lambda x: x[1],
                                         reverse=True):
-            print "{0}: {1} time{2}".format(tag_class.__name__,
+            log("{0}: {1} time{2}".format(tag_class.__name__,
                                             number,
-                                            "s"[number==1:])
+                                            "s"[number==1:]))
             if tag_class.parse == Tag.parse:
-                print "  parser not implemented"
+                log(" parser not implemented")
             else:
-                print "  parser implemented"
+                log(" parser implemented")
         
     def display_dictionary(self):
         if len(self.dictionary.keys()) == 0:
-            print "Dictionary currently empty."
+            log("Dictionary currently empty.")
         else:
             for char_id in sorted(self.dictionary.keys()):
                 if self.dictionary[char_id]['nested']:
-                    print "CharacterID {0}: {1}, tag {2} in {3}, tag {4}".format(char_id,
+                    log("CharacterID {0}: {1}, tag {2} in {3}, tag {4}".format(char_id,
                         self.tags[self.dictionary[char_id]['parent_num']].tags[self.dictionary[char_id]['num']].__class__.__name__,
                         self.dictionary[char_id]['num'],
                         self.tags[self.dictionary[char_id]['parent_num']].__class__.__name__,
-                        self.dictionary[char_id]['parent_num'])
+                        self.dictionary[char_id]['parent_num']))
                 else:
-                    print "CharacterID {0}: {1}, tag {2}".format(char_id,
+                    log("CharacterID {0}: {1}, tag {2}".format(char_id,
                         self.tags[self.dictionary[char_id]['num']].__class__.__name__,
-                        self.dictionary[char_id]['num'])
+                        self.dictionary[char_id]['num']))
 
 # ========
 
 if __name__ == "__main__":
-    swf_object = Swf(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("swf", action="store")
+    results = parser.parse_args()
+    
+    swf_object = Swf(results.swf)
     swf_object.display_header()
     #swf_object.display_tags()
     swf_object.display_dictionary()

@@ -4,7 +4,7 @@ Created on 22 Oct 2011
 @author: Bluebottle
 '''
 import datatypes
-
+from log import log
 
 class ActionFactory(object):
     @staticmethod
@@ -32,9 +32,9 @@ class Action(object):
     
     def display(self):
         if self.parser_implemented:
-            print "  Display function not implemented."
+            log("Display function not implemented.")
         else:
-            print "  Parser not implemented."
+            log("Parser not implemented.")
 
 # ==== Individual actions ====
 
@@ -610,7 +610,7 @@ class ActionGotoFrame(Action):
         self.frame = stream.read('uintle:16')
     
     def display(self):
-        print "Frame:",self.frame
+        log("Frame: {s}".format(s=self.frame))
 
 class ActionGetURL(Action):
     def parse(self,stream):
@@ -618,15 +618,15 @@ class ActionGetURL(Action):
         self.target_string = datatypes.string(stream)
     
     def display(self):
-        print "UrlString:",self.url_string
-        print "TargetString:",self.target_string
+        log("UrlString: {s}".format(s=self.url_string))
+        log("TargetString: {s}".format(s=self.target_string))
         
 class ActionStoreRegister(Action):
     def parse(self,stream):
         self.register_number = stream.read('uintle:8')
     
     def display(self):
-        print "RegisterNumber:",self.register_number
+        log("RegisterNumber: {s}".format(self.register_number))
 
 class ActionConstantPool(Action):
     def parse(self,stream):
@@ -636,9 +636,9 @@ class ActionConstantPool(Action):
             self.constant_pool.append(datatypes.string(stream))
     
     def display(self):
-        print "Count:",self.count
+        log("Count: {s}".format(self.count))
         for i, item in enumerate(self.constant_pool):
-            print "Constant {0}: {1}".format(i,item)
+            log("Constant {0}: {1}".format(i,item))
 
 class ActionWaitForFrame(Action):
     def parse(self,stream):
@@ -646,29 +646,29 @@ class ActionWaitForFrame(Action):
         self.skip_count = stream.read('uintle:8')
     
     def display(self):
-        print "Frame:",self.frame
-        print "SkipCount:",self.skip_count
+        log("Frame: {s}".format(s=self.frame))
+        log("SkipCount: {s}".format(s=self.skip_count))
 
 class ActionSetTarget(Action):
     def parse(self,stream):
         self.target_name = datatypes.string(stream)
     
     def display(self):
-        print "TargetName:",self.target_name
+        log("TargetName: {s}".format(s=self.target_name))
 
 class ActionGoToLabel(Action):
     def parse(self,stream):
         self.label = datatypes.string(stream)
     
     def display(self):
-        print "Label:",self.label
+        log("Label: {s}".format(s=self.label))
 
 class ActionWaitForFrame2(Action):
     def parse(self,stream):
         self.skip_count = stream.read('uintle:8')
     
     def display(self):
-        print "SkipCount:",self.skip_count
+        log("SkipCount: {s}".format(s=self.skip_count))
 
 class ActionDefineFunction2(Action):
     def parse(self,stream):
@@ -705,25 +705,25 @@ class ActionDefineFunction2(Action):
 
     
     def display(self):
-        print "FunctionName:",self.function_name
-        print "NumParams:",self.num_params
-        print "RegisterCount:",self.register_count
-        print "PreloadParentFlag:",self.preload_parent_flag
-        print "PreloadRootFlag:",self.preload_root_flag
-        print "SuppressSuperFlag:",self.suppress_super_flag
-        print "PreloadSuperFlag:",self.preload_super_flag
-        print "SuppressArgumentsFlag:",self.suppress_arguments_flag
-        print "PreloadArgumentsFlag:",self.preload_arguments_flag
-        print "SuppressThisFlag:",self.suppress_this_flag
-        print "PreloadThisFlag:",self.preload_this_flag
-        print "PreloadGlobalFlag:",self.preload_global_flag
-        print "Parameters are:"
+        log("FunctionName: {s}".format(s=self.function_name))
+        log("NumParams: {s}".format(s=self.num_params))
+        log("RegisterCount: {s}".format(s=self.register_count))
+        log("PreloadParentFlag: {s}".format(s=self.preload_parent_flag))
+        log("PreloadRootFlag: {s}".format(s=self.preload_root_flag))
+        log("SuppressSuperFlag: {s}".format(s=self.suppress_super_flag))
+        log("PreloadSuperFlag: {s}".format(s=self.preload_super_flag))
+        log("SuppressArgumentsFlag: {s}".format(s=self.suppress_arguments_flag))
+        log("PreloadArgumentsFlag: {s}".format(s=self.preload_arguments_flag))
+        log("SuppressThisFlag: {s}".format(s=self.suppress_this_flag))
+        log("PreloadThisFlag: {s}".format(s=self.preload_this_flag))
+        log("PreloadGlobalFlag: {s}".format(s=self.preload_global_flag))
+        log("Parameters are:")
         for p, param in self.parameters:
-            print "  Param {0}: Register {1}, ParamName {2}".format(p,param['register'],param['param_name'])
-        print "CodeSize:",self.code_size
-        print "Function code contains the following actions:"
+            log("  Param {0}: Register {1}, ParamName {2}".format(p,param['register'],param['param_name']))
+        log("CodeSize: {s}".format(s=self.code_size))
+        log("Function code contains the following actions:")
         for a, action in enumerate(self.actions):
-            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            log("  Action {0}: {1}".format(a,action.__class__.__name__))
             action.display()
 
 
@@ -781,27 +781,27 @@ class ActionTry(Action):
         
                     
     def display(self):
-        print "CatchInRegisterFlag:",self.catch_in_register_flag
-        print "FinallyBlockFlag:",self.finally_block_flag
-        print "CatchBlockFlag:",self.catch_block_flag
-        print "TrySize:",self.try_size
-        print "CatchSize:",self.catch_size
-        print "FinallySize:",self.finally_size
+        log("CatchInRegisterFlag: {s}".format(s=self.catch_in_register_flag))
+        log("FinallyBlockFlag: {s}".format(s=self.finally_block_flag))
+        log("CatchBlockFlag: {s}".format(s=self.catch_block_flag))
+        log("TrySize: {s}".format(s=self.try_size))
+        log("CatchSize: {s}".format(s=self.catch_size))
+        log("FinallySize: {s}".format(s=self.finally_size))
         if self.catch_in_register_flag == False:
-            print "CatchName:",self.catch_name
+            log("CatchName: {s}".format(s=self.catch_name))
         else:
-            print "CatchRegister:",self.catch_register
-        print "Try block contains the following actions:"
+            log("CatchRegister: {s}".format(s=self.catch_register))
+        log("Try block contains the following actions:")
         for a, action in enumerate(self.try_body):
-            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            log("Action {0}: {1}".format(a,action.__class__.__name__))
             action.display()
-        print "Catch block contains the following actions:"
+        log("Catch block contains the following actions:")
         for a, action in enumerate(self.catch_body):
-            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            log("Action {0}: {1}".format(a,action.__class__.__name__))
             action.display()
-        print "Finally block contains the following actions:"
+        log("Finally block contains the following actions:")
         for a, action in enumerate(self.finally_body):
-            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            log("Action {0}: {1}".format(a,action.__class__.__name__))
             action.display()
 
 
@@ -822,10 +822,10 @@ class ActionWith(Action):
                                                          action_length))    
     
     def display(self):
-        print "Size:",self.code_size
-        print "With block contains the following actions:"
+        log("Size: {s}".format(s=self.code_size))
+        log("With block contains the following actions:")
         for a, action in enumerate(self.actions):
-            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            log("Action {0}: {1}".format(a,action.__class__.__name__))
             action.display()
 
 class ActionPush(Action):
@@ -849,30 +849,30 @@ class ActionPush(Action):
             self.constant_16 = stream.read('uintle:16')
     
     def display(self):
-        print "Type:",self.type
+        log("Type: {s}".format(s=self.type))
         if self.type == 0:
-            print "String:",self.string
+            log("String: {s}".format(s=self.string))
         elif self.type == 1:
-            print "Float:",self.float
+            log("Float: {s}".format(s=self.float))
         elif self.type == 4:
-            print "RegisterNumber:",self.register_number
+            log("RegisterNumber: {s}".format(s=self.register_number))
         elif self.type == 5:
-            print "Boolean:",self.boolean
+            log("Boolean: {s}".format(s=self.boolean))
         elif self.type == 6:
-            print "Double:",self.double
+            log("Double: {s}".format(s=self.double))
         elif self.type == 7:
-            print "Integer:",self.integer
+            log("Integer: {s}".format(s=self.integer))
         elif self.type == 8:
-            print "Constant8:",self.constant_8
+            log("Constant8: {s}".format(s=self.constant_8))
         elif self.type == 9:
-            print "Constant16:",self.constant_16
+            log("Constant16: {s}".format(s=self.constant_16))
 
 class ActionJump(Action):
     def parse(self,stream):
         self.branch_offset = stream.read('intle:16')
     
     def display(self):
-        print "BranchOffset:",self.branch_offset
+        log("BranchOffset: {s}".format(s=self.branch_offset))
 
 class ActionGetURL2(Action):
     def parse(self,stream):
@@ -882,9 +882,9 @@ class ActionGetURL2(Action):
         self.load_variables_flag = stream.read('bool')
     
     def display(self):
-        print "SendVarsMethod:",self.send_vars_method
-        print "LoadTargetFlag:",self.load_target_flag
-        print "LoadVariablesFlag:",self.load_variables_flag
+        log("SendVarsMethod: {s}".format(s=self.send_vars_method))
+        log("LoadTargetFlag: {s}".format(s=self.load_target_flag))
+        log("LoadVariablesFlag: {s}".format(s=self.load_variables_flag))
 
 class ActionDefineFunction(Action):
     def parse(self,stream):
@@ -907,14 +907,14 @@ class ActionDefineFunction(Action):
                                                          action_length))    
             
     def display(self):
-        print "FunctionName:",self.function_name
-        print "NumParams:",self.num_params
+        log("FunctionName: {s}".format(s=self.function_name))
+        log("NumParams: {s}".format(s=self.num_params))
         for p, param in enumerate(self.params):
-            print "Param {0}: {1}".format(p,param)
-        print "CodeSize:",self.code_size
-        print "Function code contains the following actions:"
+            log("Param {0}: {1}".format(p,param))
+        log("CodeSize: {s}".format(s=self.code_size))
+        log("Function code contains the following actions:")
         for a, action in enumerate(self.actions):
-            print "  Action {0}: {1}".format(a,action.__class__.__name__)
+            log("Action {0}: {1}".format(a,action.__class__.__name__))
             action.display()
 
 class ActionIf(Action):
@@ -922,7 +922,7 @@ class ActionIf(Action):
         self.branch_offset = stream.read('intle:16')
     
     def display(self):
-        print "BranchOffset:",self.branch_offset
+        log("BranchOffset: {s}".format(s=self.branch_offset))
 
 class ActionCall(Action):
     def parse(self,stream):
@@ -940,10 +940,10 @@ class ActionGotoFrame2(Action):
             self.scene_bias = stream.read('uintle:16')
     
     def display(self):
-        print "SceneBiasFlag:",self.scene_bias_flag
-        print "PlayFlag:",self.play_flag
+        log("SceneBiasFlag: {s}".format(s=self.scene_bias_flag))
+        log("PlayFlag: {s}".format(s=self.play_flag))
         if self.scene_bias_flag:
-            print "SceneBias:",self.scene_bias
+            log("SceneBias: {s}".format(s=self.scene_bias))
 
 # ==== Summary data for actions ====
 

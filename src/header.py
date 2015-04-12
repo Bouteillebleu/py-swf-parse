@@ -3,6 +3,7 @@
 import sys, os, zlib
 import tags
 import datatypes
+from log import log
 from bitstring import ConstBitStream
 
 def main():
@@ -12,17 +13,17 @@ def main():
     try:
         file_type = s.read('bytes:3')
         if file_type == "FWS":
-            print "Standard SWF"
-            print "Version:",s.read('uintle:8')
-            print "Size:",s.read('uintle:32'),"bytes"
+            log("Standard SWF")
+            log("Version: {v}".format(v=s.read('uintle:8')))
+            log("Size: {z} bytes".format(z=s.read('uintle:32')))
             s = datatypes.rect(s)
             print "Frame rate: %d.%d" % datatypes.fixed_8(s)
-            print "Frame count:",s.read('uintle:16')
+            log("Frame count: {c}".format(c=s.read('uintle:16')))
             read_tag_headers(s)
         elif file_type == "CWS":
-            print "Compressed SWF"
-            print "Version:",s.read('uintle:8')
-            print "Uncompressed size:",s.read('uintle:32'),"bytes"
+            log("Compressed SWF")
+            log("Version: {v}".format(v=s.read('uintle:8')))
+            log("Uncompressed size: {z} bytes".format(z=s.read('uintle:32')))
             to_decompress = s[64:].tobytes()
             s = ConstBitStream(bytes=zlib.decompress(to_decompress))
             s = datatypes.rect(s)
@@ -38,7 +39,7 @@ def read_tag_headers(stream):
     tag_type_name = ''
     tags_in_file = []
     while tag_type_name != 'End':
-        print " == Reading tag",tag_number,"== "
+        log(" == Reading tag {s} ==".format(s=tag_number))
         #tag_type = stream.read('uint:10')
         #tag_length = stream.read('uint:6')
         header = stream.read('uintle:16')
@@ -58,7 +59,7 @@ def read_tag_headers(stream):
             tag_parser(stream.read('bits:%d' % (tag_length*8))) # Call an appropriate function
         else:
             tag_parser(None)
-    print "==== TAGS FOUND IN FILE: ===="
+    log("==== TAGS FOUND IN FILE: ====")
     for tag in tags_in_file:
         print tag
         

@@ -4,6 +4,7 @@ Created on 20 Oct 2011
 @author: Bluebottle
 '''
 from actions import ActionFactory
+from log import log
 
 class Rect(object):
     def __init__(self,stream):
@@ -23,7 +24,7 @@ class Rect(object):
         stream.bytealign()
     
     def __str__(self):
-        return "XMin: {0}\nXMax: {1}\nYMin: {2}\nYMax: {3}".format(self.x_min,
+        return "( XMin: {0}, XMax: {1}, YMin: {2}, YMax: {3} )".format(self.x_min,
                                                                    self.x_max,
                                                                    self.y_min,
                                                                    self.y_max)
@@ -339,6 +340,7 @@ class Shape(object):
 
 class ShapeWithStyle(Shape):
     def __init__(self,stream,calling_tag):
+        log("Parsing ShapeWithStyle")
         self.fill_styles = FillStyleArray(stream,calling_tag)
         self.line_styles = LineStyleArray(stream,calling_tag)
         Shape.__init__(self,stream,calling_tag)
@@ -358,13 +360,13 @@ class StyleChangeRecord(object):
             self.state_new_styles = stream.read('bool')
             print "StateNewStyles:",self.state_new_styles
         self.state_line_style = stream.read('bool')
-        print "StateLineStyle:",self.state_line_style
+        log("StateLineStyle: {s}".format(s=self.state_line_style))
         self.state_fill_style_1 = stream.read('bool')
-        print "StateFillStyle1:",self.state_fill_style_1
+        log("StateFillStyle1: {s}".format(s=self.state_fill_style_1))
         self.state_fill_style_0 = stream.read('bool')
-        print "StateFillStyle0:",self.state_fill_style_0
+        log("StateFillStyle0: {s}".format(s=self.state_fill_style_0))
         self.state_move_to = stream.read('bool')
-        print "StateMoveTo:",self.state_move_to
+        log("StateMoveTo: {s}".format(s=self.state_move_to))
         if self.state_move_to:
             self.move_bits = stream.read('uint:5')
             if self.move_bits == 0:
@@ -374,21 +376,23 @@ class StyleChangeRecord(object):
                 move_bits_format = 'int:%d' % self.move_bits
                 self.move_delta_x = stream.read(move_bits_format)
                 self.move_delta_y = stream.read(move_bits_format)
-            print "MoveDeltaX:",self.move_delta_x
-            print "MoveDeltaY:",self.move_delta_y
+            log("MoveDeltaX: {s}".format(s=self.move_delta_x))
+            log("MoveDeltaY: {s}".format(s=self.move_delta_y))
         if fill_bits > 0:
             fill_bits_format = 'uint:%d' % fill_bits
             if self.state_fill_style_0:
                 self.fill_style_0 = stream.read(fill_bits_format)
-                print "FillStyle0:",self.fill_style_0
+                log("FillStyle0: {s}".format(s=self.fill_style_0))
             if self.state_fill_style_1:
                 self.fill_style_1 = stream.read(fill_bits_format)
-                print "FillStyle1:",self.fill_style_1
+                log("FillStyle1: {s}".format(s=self.fill_style_1))
         if self.state_line_style and line_bits > 0:
             line_bits_format = 'uint:%d' % line_bits
             self.line_style = stream.read(line_bits_format)
-            print "LineStyle:",self.line_style
-        #stream.bytealign()
+            log("LineStyle: {s}".format(s=self.line_style))
+        # TODO: Whether this is byte-aligned depends on whether:
+        # (a) state_new_styles is set and True (if not, byte-align at the end)
+        # (b) FillStyles and/or LineStyles have byte-aligned fields at start
         if hasattr(self,"state_new_styles") and self.state_new_styles:
             # TODO: Fix this up, probably turn these into lists.
             self.fill_styles = FillStyleArray(stream,calling_tag)
