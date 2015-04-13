@@ -71,6 +71,11 @@ class DefineShape(Tag):
         self.shape_bounds = datatypes.Rect(stream)
         log("ShapeBounds: {s}".format(s=self.shape_bounds))
         self.shape = datatypes.ShapeWithStyle(stream,'DefineShape')
+    
+    def display(self):
+        log("ShapeID: {s}".format(s=self.shape_id))
+        log("ShapeBounds: {s}".format(s=self.shape_bounds))
+        # TODO: Add display output for ShapeWithStyle
 
 class PlaceObject(Tag):
     def parse(self,stream):
@@ -197,10 +202,34 @@ class DefineBitsLossless(Tag):
     pass
 
 class DefineBitsJPEG2(Tag):
-    pass
+    def parse(self,stream):
+        self.character_id = stream.read('uintle:16')
+        if stream.peek(32) == '0xffd9ffd8':
+            # Some SWF versions before 8 erroneously have 
+            # an extra JPEG EOI and SOI pair before the actual SOI.
+            stream.read(32) # In that case, we just throw away the extra 4 bytes.
+        # TODO: Convert the original JPEG extraction-to-file code,
+        # as shown below, to something that'll save an image.
+        #try:
+        #    f = open(os.path.join("../output",filename),'wb')
+        #    while stream.pos < stream.len:
+        #        f.write(struct.pack('b',stream.read('int:8')))
+        #finally:
+        #    f.close()
+        #    log("Wrote JPEG data to {s}".format(s=filename))
 
 class DefineShape2(Tag):
-    pass
+    def parse(self,stream):
+        self.shape_id = stream.read('uintle:16')
+        log("ShapeID: {s}".format(s=self.shape_id))
+        self.shape_bounds = datatypes.Rect(stream)
+        log("ShapeBounds: {s}".format(s=self.shape_bounds))
+        self.shape = datatypes.ShapeWithStyle(stream,'DefineShape2')
+    
+    def display(self):
+        log("ShapeID: {s}".format(s=self.shape_id))
+        log("ShapeBounds: {s}".format(s=self.shape_bounds))
+        # TODO: Add display output for ShapeWithStyle
 
 class DefineButtonCxform(Tag):
     def parse(self,stream):
@@ -275,8 +304,18 @@ class RemoveObject2(Tag):
         log("Depth: {s}".format(s=self.depth))
 
 class DefineShape3(Tag):
-    pass
-
+    def parse(self,stream):
+        self.shape_id = stream.read('uintle:16')
+        log("ShapeID: {s}".format(s=self.shape_id))
+        self.shape_bounds = datatypes.Rect(stream)
+        log("ShapeBounds: {s}".format(s=self.shape_bounds))
+        self.shape = datatypes.ShapeWithStyle(stream,'DefineShape3')
+    
+    def display(self):
+        log("ShapeID: {s}".format(s=self.shape_id))
+        log("ShapeBounds: {s}".format(s=self.shape_bounds))
+        # TODO: Add display output for ShapeWithStyle
+    
 class DefineText2(Tag):
     pass
 
@@ -374,7 +413,7 @@ class DefineSprite(Tag):
         self.sprite_id = stream.read('uintle:16')
         self.frame_count = stream.read('uintle:16')
         self.tags = []
-        current_tag_type = -1
+        current_tag_type = None
         while stream.pos < stream.len and current_tag_type != 0:
             tag_header = stream.read('uintle:16')
             current_tag_type = tag_header >> 6 # Ignore the bottom 6 bits
@@ -397,8 +436,6 @@ class DefineSprite(Tag):
         for i, tag in enumerate(self.tags):
             log("tag {0}: {1}".format(i,tag.__class__.__name__))
             tag.display()
-
-
 
 class FrameLabel(Tag):
     def parse(self,stream):
@@ -584,20 +621,33 @@ class CSMTextSettings(Tag):
 class DefineFont3(Tag):
     def parse(self,stream):
         self.font_id = stream.read('uintle:16')
+        log("DEBUG: FontID: {s}".format(s=self.font_id))
         self.font_flags_has_layout = stream.read('bool')
+        log("DEBUG: FontFlagsHasLayout: {s}".format(s=self.font_flags_has_layout))
         self.font_flags_shiftJIS = stream.read('bool')
+        log("DEBUG: FontFlagsShiftJIS: {s}".format(s=self.font_flags_shiftJIS))
         self.font_flags_small_text = stream.read('bool')
+        log("DEBUG: FontFlagsSmallText: {s}".format(s=self.font_flags_small_text))
         self.font_flags_ansi = stream.read('bool')
+        log("DEBUG: FontFlagsANSI: {s}".format(s=self.font_flags_ansi))
         self.font_flags_wide_offsets = stream.read('bool')
+        log("DEBUG: FontFlagsWideOffsets: {s}".format(s=self.font_flags_wide_offsets))
         self.font_flags_wide_codes = stream.read('bool')
+        log("DEBUG: FontFlagsWideCodes: {s}".format(s=self.font_flags_wide_codes))
         self.font_flags_italic = stream.read('bool')
+        log("DEBUG: FontFlagsItalic: {s}".format(s=self.font_flags_italic))
         self.font_flags_bold = stream.read('bool')
+        log("DEBUG: FontFlagsBold: {s}".format(s=self.font_flags_bold))
         self.language_code = stream.read('uintle:8') # TODO: enum?
+        log("DEBUG: LanguageCode: {s}".format(s=self.language_code))
         self.font_name_len = stream.read('uintle:8')
-        self.font_name = [] # TODO: wtf
+        log("DEBUG: FontNameLen: {s}".format(s=self.font_name_len))
+        self.font_name = [] # TODO: change this to be stored as a string instead
         for x in range(0,self.font_name_len):
-            self.font_name.append(stream.read('uintle:8'))
+            self.font_name.append(chr(stream.read('uintle:8')))
+        log("DEBUG: FontName: {s}".format(s="".join(self.font_name)))
         self.num_glyphs = stream.read('uintle:16')
+        log("DEBUG: NumGlyphs: {s}".format(s=self.num_glyphs))
         self.offset_table = []
         if self.font_flags_wide_offsets:
             for x in range(0,self.num_glyphs):
@@ -607,16 +657,22 @@ class DefineFont3(Tag):
             for x in range(0,self.num_glyphs):
                 self.offset_table.append(stream.read('uintle:16'))
             self.code_table_offset = stream.read('uintle:16')
+        log("DEBUG: CodeTableOffset: {s}".format(s=self.code_table_offset))
         self.glyph_shape_table = []
         for x in range(0,self.num_glyphs):
-            pass # TODO: parse shapes, "same as in DefineFont"
+            log("DEBUG: Reading shape for glyph {x}".format(x=x))
+            self.glyph_shape_table.append(datatypes.Shape(stream,'DefineFont3'))
+            # TODO: parse SHAPE[NumGlyphs], "same as in DefineFont"
         self.code_table = []
         for x in range(0,self.num_glyphs):
             self.code_table.append(stream.read('uintle:16'))
         if self.font_flags_has_layout:
             self.font_ascent = stream.read('uintle:16')
+            log("DEBUG: FontAscent: {s}".format(s=self.font_ascent))
             self.font_descent = stream.read('uintle:16')
+            log("DEBUG: FontDescent: {s}".format(s=self.font_descent))
             self.font_leading = stream.read('intle:16')
+            log("DEBUG: FontLeading: {s}".format(s=self.font_leading))
             self.font_advance_table = []
             for x in range(0,self.num_glyphs):
                 self.font_advance_table.append(stream.read('intle:16'))
@@ -629,6 +685,21 @@ class DefineFont3(Tag):
                 self.font_kerning_table.append(datatypes.KerningRecord(stream,
                                                self.font_flags_wide_codes))
 
+    def display(self):
+        log("FontID: {s}".format(s=self.font_id))
+        log("FontFlagsHasLayout: {s}".format(s=self.font_flags_has_layout))
+        log("FontFlagsShiftJIS: {s}".format(s=self.font_flags_shiftJIS))
+        log("FontFlagsSmallText: {s}".format(s=self.font_flags_small_text))
+        log("FontFlagsANSI: {s}".format(s=self.font_flags_ansi))
+        log("FontFlagsWideOffsets: {s}".format(s=self.font_flags_wide_offsets))
+        log("FontFlagsWideCodes: {s}".format(s=self.font_flags_wide_codes))
+        log("FontFlagsItalic: {s}".format(s=self.font_flags_italic))
+        log("FontFlagsBold: {s}".format(s=self.font_flags_bold))
+        log("LanguageCode: {s}".format(s=self.language_code))
+        log("FontNameLen: {s}".format(s=self.font_name_len))
+        # TODO: Remaining
+
+    
 class SymbolClass(Tag):
     def parse(self,stream):
         num_symbols = stream.read('uintle:16')
@@ -660,8 +731,15 @@ class DefineShape4(Tag):
         self.uses_non_scaling_strokes = stream.read('bool')
         self.uses_scaling_strokes = stream.read('bool')
         self.shape = datatypes.ShapeWithStyle(stream,'DefineShape4')
-        # TODO: is this actually multiple shapes?
-        
+    
+    def display(self):
+        log("ShapeID: {s}".format(s=self.shape_id))
+        log("ShapeBounds: {s}".format(s=self.shape_bounds))
+        log("EdgeBounds: {s}".format(s=self.edge_bounds))
+        log("UsesFillWindingRule: {s}".format(s=self.uses_fill_winding_rule))
+        log("UsesNonScalingStrokes: {s}".format(s=self.uses_non_scaling_strokes))
+        log("UsesScalingStrokes: {s}".format(s=self.uses_scaling_strokes))
+        # TODO: Add display output for ShapeWithStyle
 
 class DefineMorphShape2(Tag):
     pass
@@ -939,126 +1017,3 @@ def class_from_tag_number(number):
         return tag_data[number]['class']
     else:
         return None
-
-# ========
-
-def define_shape(stream):
-    log("ShapeId: {s}".format(s=stream.read('uintle:16')))
-    log("ShapeBounds:")
-    stream = datatypes.rect(stream)
-    datatypes.shape_with_style(stream,"DefineShape")
-
-def define_shape_2(stream):
-    log("ShapeId: {s}".format(s=stream.read('uintle:16')))
-    log("ShapeBounds:")
-    stream = datatypes.rect(stream)
-    datatypes.shape_with_style(stream,"DefineShape2")
-
-def define_shape_3(stream):
-    log("ShapeId: {s}".format(s=stream.read('uintle:16')))
-    log("ShapeBounds:")
-    stream = datatypes.rect(stream)
-    datatypes.shape_with_style(stream,"DefineShape3")
-    
-def define_shape_4(stream):
-    log("ShapeId: {s}".format(s=stream.read('uintle:16')))
-    log("ShapeBounds:")
-    stream = datatypes.rect(stream)
-    log("EdgeBounds:")
-    stream = datatypes.rect(stream)
-    stream.pos += 5
-    log("UsesFillWindingRule: {s}".format(s=stream.read('bool')))
-    log("UsesNonScalingStrokes: {s}".format(s=stream.read('bool')))
-    log("UsesScalingStrokes: {s}".format(s=stream.read('bool')))
-    datatypes.shape_with_style(stream,"DefineShape4")
-    
-def define_text(stream):
-    log("FontId: {s}".format(s=stream.read('uintle:16')))
-    starting_bytepos = stream.bytepos
-    n_glyphs = stream.peek('uintle:16') / 2
-    for glyph_number in range(n_glyphs):
-        stream.bytepos = starting_bytepos + (2 * glyph_number)
-        glyph_offset = stream.read('uintle:16')
-        stream.bytepos = starting_bytepos + glyph_offset
-        datatypes.shape(stream,"DefineText")
-
-def do_init_action(stream):
-    log("SpriteID: {s}".format(s=stream.read('uintle:16')))
-    action_number = 0
-    action_name = ''
-    while action_name != 'ActionEndFlag':
-        log("== Reading action {a} ==".format(a=action_number))
-        action_code = stream.read('uintle:8')
-        if action_code >= 0x80:
-            # If it's actually 63, we're using the long record header form instead.
-            action_length = stream.read('uintle:16')
-        else:
-            action_length = None
-        action_name = datatypes.get_action_type_name_from_number(action_code)
-        log("Action type: {code} {name}".format(code=action_code,
-                                                name=action_name))
-        action_number += 1
-        if action_length:
-            log("Action length: {a} bytes".format(a=action_length))
-            action_parser = get_action_parser_from_number(action_code)
-            action_parser(stream.read('bits:%d' % (action_length*8)))         
-        
-def define_bits_jpeg_2(stream):
-    character_id = stream.read('uintle:16')
-    log("Character ID: {s}".format(s=character_id))
-    filename = "%d.jpeg" % character_id
-    if stream.peek(32) == '0xffd9ffd8': # Some SWF versions before 8 erroneously have an extra JPEG EOI and SOI pair before the actual SOI.
-        stream.read(32) # In that case, we just throw away the extra 4 bytes.
-    try:
-        f = open(os.path.join("../output",filename),'wb')
-        while stream.pos < stream.len:
-            f.write(struct.pack('b',stream.read('int:8')))
-    finally:
-        f.close()
-        log("Wrote JPEG data to {s}".format(s=filename))
-
-def define_sprite(stream):
-    #print '%r' % data
-    sprite_id = stream.read('uintle:16')
-    frame_count = stream.read('uintle:16')
-    print "Sprite ID:",sprite_id
-    print "Frame count:",frame_count
-    print "Sprite contains tags:"
-    tag_name = ''
-    while stream.pos < stream.len and tag_name != 'End':
-        current_pos = stream.pos
-        tag_name, tag_length, is_long_header = datatypes.record_header(stream)
-        print tag_name,"- length",tag_length,"bytes"
-        if is_long_header:
-            stream.pos = current_pos + (tag_length*8) + 48
-        else:
-            stream.pos = current_pos + (tag_length*8) + 16
-        
-def not_implemented(data):
-    log("No parser for this tag yet.")
-    
-# == The list of action parser functions ==
-
-def get_action_parser_from_number(number):
-    action_functions = {0x81: action_parsers.goto_frame,
-                        0x83: action_parsers.get_url,
-                        0x88: action_parsers.constant_pool,
-                        0x8a: action_parsers.wait_for_frame,
-                        0x8b: action_parsers.set_target,
-                        0x8c: action_parsers.goto_label,
-                        0x8d: action_parsers.wait_for_frame_2,
-                        0x8e: action_parsers.define_function_2,
-                        0x8f: action_parsers.action_try,
-                        0x94: action_parsers.action_with,
-                        0x96: action_parsers.push,
-                        0x99: action_parsers.jump,
-                        0x9a: action_parsers.get_url_2,
-                        0x9b: action_parsers.define_function,
-                        0x9d: action_parsers.action_if,
-                        0x9f: action_parsers.goto_frame_2,
-                        }
-    if number in action_functions:
-        return action_functions[number]
-    else:
-        return action_parsers.not_implemented
-

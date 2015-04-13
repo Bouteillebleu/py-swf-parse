@@ -281,13 +281,9 @@ class ClipEventFlags(object):
 
 class Shape(object):
     def __init__(self,stream,calling_tag):
-        print "Creating new Shape"
-        print "stream.bytepos =",stream.bytepos
         self.num_fill_bits = stream.read('uint:4')
-        print "NumFillBits:",self.num_fill_bits
         self.num_line_bits = stream.read('uint:4')
-        print "NumLineBits:",self.num_line_bits
-        self.shaperecords = []
+        self.shape_records = []
         # Note from the v10 spec: "Each individual shape is byte-aligned
         # within an array of shape records; one shape record is padded to
         # a byte boundary before the next shape record begins."
@@ -581,11 +577,3 @@ def string(stream):
         new_string.append(stream.read('bytes:1'))
     stream.bytepos += 1 # Ignore the final 0 in the string.
     return ''.join(new_string)
-
-# ======== Old-style datatype parsing functions
-# ======== that haven't been implemented as classes yet
-
-def shape_with_style(stream,calling_tag):
-    stream = fill_style_array(stream,calling_tag)
-    stream = line_style_array(stream,calling_tag)
-    shape(stream,calling_tag)
