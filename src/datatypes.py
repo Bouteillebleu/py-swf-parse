@@ -302,9 +302,10 @@ class Shape(object):
         record = None
         while type(record) != EndShapeRecord:
             # TODO: track fill_bits and line_bits
-            self.shape_records.append(ShapeRecordFactory
-                                     .new_shape_record(stream,self,
-                                     calling_tag))
+            record = (ShapeRecordFactory.new_shape_record(stream,
+                                         self,
+                                         calling_tag))
+            self.shape_records.append(record)
 
 class ShapeWithStyle(object):
     def __init__(self,stream,calling_tag):
@@ -332,6 +333,7 @@ class ShapeRecordFactory(object):
         if type_flag == 0:
             if stream.peek('uint:5') == 0:
                 # EndShapeRecord: type_flag = 0, next 5 bits all 0
+                stream.pos += 5
                 return EndShapeRecord(stream)
             else:
                 # StyleChangeRecord: type_flag = 0, at least one of next 5 bits 1.
@@ -370,7 +372,11 @@ class EndShapeRecord(object):
         log("Parsing EndShapeRecord")
         self.type_flag = 0
         self.end_of_shape = 0
-        #stream.bytealign()
+        # Based on the demo on p232 of v19 of the spec,
+        # I think we should be byte-aligning at the end of
+        # a set of Shape Records? (i.e. at the end of
+        # an EndShapeRecord).
+        stream.bytealign()
     
 class StyleChangeRecord(object):
     def __init__(self,stream,calling_tag,fill_bits,line_bits,first_glyph=False):
