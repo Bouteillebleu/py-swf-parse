@@ -66,7 +66,7 @@ class ShowFrame(Tag):
 
 class DefineShape(Tag):
     def parse(self,stream):
-        self.shape_id = stream.read('uintle:16')
+        self.shape_id = datatypes.UI16(stream)
         log("ShapeID: {s}".format(s=self.shape_id))
         self.shape_bounds = datatypes.Rect(stream)
         log("ShapeBounds: {s}".format(s=self.shape_bounds))
@@ -79,8 +79,8 @@ class DefineShape(Tag):
 
 class PlaceObject(Tag):
     def parse(self,stream):
-        self.character_id = stream.read('uintle:16')
-        self.depth = stream.read('uintle:16')
+        self.character_id = datatypes.UI16(stream)
+        self.depth = datatypes.UI16(stream)
         self.matrix = datatypes.Matrix(stream)
         self.color_transform = datatypes.Cxform(stream)
     
@@ -92,8 +92,8 @@ class PlaceObject(Tag):
 
 class RemoveObject(Tag):
     def parse(self,stream):
-        self.character_id = stream.read('uintle:16')
-        self.depth = stream.read('uintle:16')
+        self.character_id = datatypes.UI16(stream)
+        self.depth = datatypes.UI16(stream)
     
     def display(self):
         log("CharacterId: {s}".format(s=self.character_id))
@@ -118,14 +118,14 @@ class SetBackgroundColor(Tag):
 class DefineFont(Tag):
     def parse(self,stream):
         log("DEBUG: stream length = {s} bytes".format(s=(len(stream)/8)))
-        self.font_id = stream.read('uintle:16')
+        self.font_id = datatypes.UI16(stream)
         starting_bytepos = stream.bytepos
         log("DEBUG: starting bytepos = {s}".format(s=starting_bytepos))
         self.n_glyphs = stream.peek('uintle:16') / 2
         self.offset_table = []
         self.glyph_shape_table = []
         for glyph_number in xrange(self.n_glyphs):
-            self.offset_table.append(stream.read('uintle:16'))
+            self.offset_table.append(datatypes.UI16(stream))
             log("glyph {g}, offset = {s}".format(g=glyph_number,
                                                  s=self.offset_table[-1]))
         for glyph_number in xrange(self.n_glyphs):
@@ -142,10 +142,10 @@ class DoAction(Tag):
     def parse(self,stream):
         self.actions = []
         while stream.peek('uintle:8') != 0:
-            action_code = stream.read('uintle:8')
+            action_code = datatypes.UI8(stream)
             action_length = 0
             if action_code > 0x7F:
-                action_length = stream.read('uintle:16')
+                action_length = datatypes.UI16(stream)
             action_stream = stream.read('bits:{0}'.format(action_length*8))
             self.actions.append(ActionFactory.new_action(action_stream,
                                                          action_code,
@@ -179,9 +179,9 @@ class SoundStreamHead(Tag):
         self.stream_sound_rate = stream.read('uint:2')
         self.stream_sound_size = stream.read('uint:1')
         self.stream_sound_type = stream.read('uint:1')
-        self.stream_sound_sample_count = stream.read('uintle:16')
+        self.stream_sound_sample_count = datatypes.UI16(stream)
         if self.stream_sound_compression == 2:
-            self.latency_seek = stream.read('intle:16')
+            self.latency_seek = datatypes.SI16(stream)
 
     def display(self):
         log("PlaybackSoundRate: {s}".format(s=self.playback_sound_rate))
@@ -203,7 +203,7 @@ class DefineBitsLossless(Tag):
 
 class DefineBitsJPEG2(Tag):
     def parse(self,stream):
-        self.character_id = stream.read('uintle:16')
+        self.character_id = datatypes.UI16(stream)
         if stream.peek(32) == '0xffd9ffd8':
             # Some SWF versions before 8 erroneously have 
             # an extra JPEG EOI and SOI pair before the actual SOI.
@@ -220,7 +220,7 @@ class DefineBitsJPEG2(Tag):
 
 class DefineShape2(Tag):
     def parse(self,stream):
-        self.shape_id = stream.read('uintle:16')
+        self.shape_id = datatypes.UI16(stream)
         log("ShapeID: {s}".format(s=self.shape_id))
         self.shape_bounds = datatypes.Rect(stream)
         log("ShapeBounds: {s}".format(s=self.shape_bounds))
@@ -233,7 +233,7 @@ class DefineShape2(Tag):
 
 class DefineButtonCxform(Tag):
     def parse(self,stream):
-        self.button_id = stream.read('uintle:16')
+        self.button_id = datatypes.UI16(stream)
         self.button_color_transform = datatypes.Cxform(stream)
     
     def display(self):
@@ -255,19 +255,19 @@ class PlaceObject2(Tag):
         self.has_matrix = stream.read('bool')
         self.has_character = stream.read('bool')
         self.move = stream.read('bool')
-        self.depth = stream.read('uintle:16')
+        self.depth = datatypes.UI16(stream)
         if self.has_character:
-            self.character_id = stream.read('uintle:16')
+            self.character_id = datatypes.UI16(stream)
         if self.has_matrix:
             self.matrix = datatypes.Matrix(stream)
         if self.has_color_transform:
             self.color_transform = datatypes.CxformWithAlpha(stream)
         if self.has_ratio:
-            self.ratio = stream.read('uintle:16')
+            self.ratio = datatypes.UI16(stream)
         if self.has_name:
             self.name = datatypes.string(stream)
         if self.has_clip_depth:
-            self.clip_depth = stream.read('uintle:16')
+            self.clip_depth = datatypes.UI16(stream)
         if self.has_clip_actions:
             self.clip_actions = datatypes.ClipActions(stream,self.swf_version)
 
@@ -298,14 +298,14 @@ class PlaceObject2(Tag):
 
 class RemoveObject2(Tag):
     def parse(self,stream):
-        self.depth = stream.read('uintle:16')
+        self.depth = datatypes.UI16(stream)
     
     def display(self):
         log("Depth: {s}".format(s=self.depth))
 
 class DefineShape3(Tag):
     def parse(self,stream):
-        self.shape_id = stream.read('uintle:16')
+        self.shape_id = datatypes.UI16(stream)
         log("ShapeID: {s}".format(s=self.shape_id))
         self.shape_bounds = datatypes.Rect(stream)
         log("ShapeBounds: {s}".format(s=self.shape_bounds))
@@ -330,7 +330,7 @@ class DefineBitsLossless2(Tag):
 
 class DefineEditText(Tag):
     def parse(self,stream):
-        self.character_id = stream.read('uintle:16')
+        self.character_id = datatypes.UI16(stream)
         self.bounds = datatypes.Rect(stream)
         self.has_text = stream.read('bool')
         self.word_wrap = stream.read('bool')
@@ -349,21 +349,21 @@ class DefineEditText(Tag):
         self.html = stream.read('bool')
         self.use_outlines = stream.read('bool')
         if self.has_font:
-            self.font_id = stream.read('uintle:16')
+            self.font_id = datatypes.UI16(stream)
         if self.has_font_class:
             self.font_class = datatypes.string(stream)
         if self.has_font:
-            self.font_height = stream.read('uintle:16')
+            self.font_height = datatypes.UI16(stream)
         if self.has_text_color:
             self.text_color = datatypes.Rgba(stream)
         if self.has_max_length:
-            self.max_length = stream.read('uintle:16')
+            self.max_length = datatypes.UI16(stream)
         if self.has_layout:
-            self.align = stream.read('uintle:8')
-            self.left_margin = stream.read('uintle:16')
-            self.right_margin = stream.read('uintle:16')
-            self.indent = stream.read('uintle:16')
-            self.leading = stream.read('intle:16')
+            self.align = datatypes.UI8(stream)
+            self.left_margin = datatypes.UI16(stream)
+            self.right_margin = datatypes.UI16(stream)
+            self.indent = datatypes.UI16(stream)
+            self.leading = datatypes.SI16(stream)
         self.variable_name = datatypes.string(stream)
         if self.has_text:
             self.initial_text = datatypes.string(stream)
@@ -410,17 +410,17 @@ class DefineEditText(Tag):
 
 class DefineSprite(Tag):
     def parse(self,stream):
-        self.sprite_id = stream.read('uintle:16')
-        self.frame_count = stream.read('uintle:16')
+        self.sprite_id = datatypes.UI16(stream)
+        self.frame_count = datatypes.UI16(stream)
         self.tags = []
         current_tag_type = None
         while stream.pos < stream.len and current_tag_type != 0:
-            tag_header = stream.read('uintle:16')
+            tag_header = datatypes.UI16(stream)
             current_tag_type = tag_header >> 6 # Ignore the bottom 6 bits
             current_tag_length = tag_header & 0x3F # Only keep bottom 6 bits
             if current_tag_length == 0x3f:
                 # If it's actually 63, use the long record header form instead.
-                current_tag_length = stream.read('intle:32')
+                current_tag_length = datatypes.SI32(stream)
             tag_stream = stream.read('bits:{0}'.format(current_tag_length*8))
             log("Creating nested tag...")
             new_tag = TagFactory.new_tag(self.swf_version,
@@ -459,9 +459,9 @@ class SoundStreamHead2(Tag):
         self.stream_sound_rate = stream.read('uint:2')
         self.stream_sound_size = stream.read('uint:1')
         self.stream_sound_type = stream.read('uint:1')
-        self.stream_sound_sample_count = stream.read('uintle:16')
+        self.stream_sound_sample_count = datatypes.UI16(stream)
         if self.stream_sound_compression == 2:
-            self.latency_seek = stream.read('intle:16')
+            self.latency_seek = datatypes.SI16(stream)
 
     def display(self):
         log("PlaybackSoundRate: {s}".format(s=self.playback_sound_rate))
@@ -483,20 +483,20 @@ class DefineFont2(Tag):
 
 class ExportAssets(Tag):
     def parse(self,stream):
-        count = stream.read('uintle:16')
+        count = datatypes.UI16(stream)
         self.assets = []
         for x in range(0,count):
-            new_asset = {'tag': stream.read('uintle:16'),
+            new_asset = {'tag': datatypes.UI16(stream),
                          'name': datatypes.string(stream)}
             self.assets.append(new_asset)
 
 class ImportAssets(Tag):
     def parse(self,stream):
         self.url = datatypes.string(stream)
-        count = stream.read('uintle:16')
+        count = datatypes.UI16(stream)
         self.assets = []
         for x in range(0,count):
-            new_asset = {'tag': stream.read('uintle:16'),
+            new_asset = {'tag': datatypes.UI16(stream),
                          'name': datatypes.string(stream)}
             self.assets.append(new_asset)
 
@@ -506,13 +506,13 @@ class EnableDebugger(Tag):
 
 class DoInitAction(Tag):
     def parse(self,stream):
-        self.sprite_id = stream.read('uintle:16')
+        self.sprite_id = datatypes.UI16(stream)
         self.actions = []
         while stream.peek('uintle:8') != 0:
-            action_code = stream.read('uintle:8')
+            action_code = datatypes.UI8(stream)
             action_length = 0
             if action_code > 0x7F:
-                action_length = stream.read('uintle:16')
+                action_length = datatypes.UI16(stream)
             action_stream = stream.read('bits:{0}'.format(action_length*8))
             self.actions.append(ActionFactory.new_action(action_stream,
                                                          action_code,
@@ -525,14 +525,14 @@ class DoInitAction(Tag):
 
 class DefineVideoStream(Tag):
     def parse(self,stream):
-        self.character_id = stream.read('uintle:16')
-        self.num_frames = stream.read('uintle:16')
-        self.width = stream.read('uintle:16')
-        self.height = stream.read('uintle:16')
+        self.character_id = datatypes.UI16(stream)
+        self.num_frames = datatypes.UI16(stream)
+        self.width = datatypes.UI16(stream)
+        self.height = datatypes.UI16(stream)
         stream.pos += 4
         self.video_flags_deblocking = stream.read('uint:3') # TODO: enums!
         self.video_flags_smoothing = stream.read('uint:1') # TODO: bool?
-        self.codec_id = stream.read('uintle:8') # TODO: enums!
+        self.codec_id = datatypes.UI8(stream) # TODO: enums!
         # TODO: Finish
         stream.bytealign()
 
@@ -549,8 +549,8 @@ class EnableDebugger2(Tag):
 
 class ScriptLimits(Tag):
     def parse(self,stream):
-        self.max_recursion_depth = stream.read('uintle:16')
-        self.script_timeout_seconds = stream.read('uintle:16')
+        self.max_recursion_depth = datatypes.UI16(stream)
+        self.script_timeout_seconds = datatypes.UI16(stream)
         
     def display(self):
         log("MaxRecursionDepth: {s}".format(s=self.max_recursion_depth))
@@ -558,8 +558,8 @@ class ScriptLimits(Tag):
 
 class SetTabIndex(Tag):
     def parse(self,stream):
-        self.depth = stream.read('uintle:16')
-        self.tab_index = stream.read('uintle:16')
+        self.depth = datatypes.UI16(stream)
+        self.tab_index = datatypes.UI16(stream)
     
     def display(self):
         log("Depth: {s}".format(s=self.depth))
@@ -590,16 +590,16 @@ class ImportAssets2(Tag):
     def parse(self,stream):
         self.url = datatypes.string(stream)
         stream.pos += 16
-        count = stream.read('uintle:16')
+        count = datatypes.UI16(stream)
         self.assets = []
         for x in range(0,count):
-            new_asset = {'tag': stream.read('uintle:16'),
+            new_asset = {'tag': datatypes.UI16(stream),
                          'name': datatypes.string(stream)}
             self.assets.append(new_asset)
 
 class DefineFontAlignZones(Tag):
     def parse(self,stream):
-        self.font_id = stream.read('uintle:16')
+        self.font_id = datatypes.UI16(stream)
         self.csm_table_hint = stream.read('uint:2')
         stream.pos += 6
         # TODO: Use font_id to find the relevant DefineFont3 tag.
@@ -610,17 +610,17 @@ class DefineFontAlignZones(Tag):
 
 class CSMTextSettings(Tag):
     def parse(self,stream):
-        self.text_id = stream.read('uintle:16')
+        self.text_id = datatypes.UI16(stream)
         self.use_flash_type = stream.read('int:2')
         self.grid_fit = stream.read('int:3')
         stream.pos += 3
-        self.thickness = stream.read('floatle:32')
-        self.sharpness = stream.read('floatle:32')
+        self.thickness = datatypes.Float(stream)
+        self.sharpness = datatypes.Float(stream)
         # TODO: last 8 bits should all be 0.        
 
 class DefineFont3(Tag):
     def parse(self,stream):
-        self.font_id = stream.read('uintle:16')
+        self.font_id = datatypes.UI16(stream)
         log("DEBUG: FontID: {s}".format(s=self.font_id))
         self.font_flags_has_layout = stream.read('bool')
         log("DEBUG: FontFlagsHasLayout: {s}".format(s=self.font_flags_has_layout))
@@ -638,25 +638,25 @@ class DefineFont3(Tag):
         log("DEBUG: FontFlagsItalic: {s}".format(s=self.font_flags_italic))
         self.font_flags_bold = stream.read('bool')
         log("DEBUG: FontFlagsBold: {s}".format(s=self.font_flags_bold))
-        self.language_code = stream.read('uintle:8') # TODO: enum?
+        self.language_code = datatypes.UI8(stream) # TODO: enum?
         log("DEBUG: LanguageCode: {s}".format(s=self.language_code))
-        self.font_name_len = stream.read('uintle:8')
+        self.font_name_len = datatypes.UI8(stream)
         log("DEBUG: FontNameLen: {s}".format(s=self.font_name_len))
         self.font_name = [] # TODO: change this to be stored as a string instead
         for x in range(0,self.font_name_len):
-            self.font_name.append(chr(stream.read('uintle:8')))
+            self.font_name.append(chr(datatypes.UI8(stream)))
         log("DEBUG: FontName: {s}".format(s="".join(self.font_name)))
-        self.num_glyphs = stream.read('uintle:16')
+        self.num_glyphs = datatypes.UI16(stream)
         log("DEBUG: NumGlyphs: {s}".format(s=self.num_glyphs))
         self.offset_table = []
         if self.font_flags_wide_offsets:
             for x in range(0,self.num_glyphs):
-                self.offset_table.append(stream.read('uintle:32'))
-            self.code_table_offset = stream.read('uintle:32')
+                self.offset_table.append(datatypes.UI32(stream))
+            self.code_table_offset = datatypes.UI32(stream)
         else:
             for x in range(0,self.num_glyphs):
-                self.offset_table.append(stream.read('uintle:16'))
-            self.code_table_offset = stream.read('uintle:16')
+                self.offset_table.append(datatypes.UI16(stream))
+            self.code_table_offset = datatypes.UI16(stream)
         log("DEBUG: CodeTableOffset: {s}".format(s=self.code_table_offset))
         self.glyph_shape_table = []
         for x in range(0,self.num_glyphs):
@@ -665,21 +665,21 @@ class DefineFont3(Tag):
             # TODO: parse SHAPE[NumGlyphs], "same as in DefineFont"
         self.code_table = []
         for x in range(0,self.num_glyphs):
-            self.code_table.append(stream.read('uintle:16'))
+            self.code_table.append(datatypes.UI16(stream))
         if self.font_flags_has_layout:
-            self.font_ascent = stream.read('uintle:16')
+            self.font_ascent = datatypes.UI16(stream)
             log("DEBUG: FontAscent: {s}".format(s=self.font_ascent))
-            self.font_descent = stream.read('uintle:16')
+            self.font_descent = datatypes.UI16(stream)
             log("DEBUG: FontDescent: {s}".format(s=self.font_descent))
-            self.font_leading = stream.read('intle:16')
+            self.font_leading = datatypes.SI16(stream)
             log("DEBUG: FontLeading: {s}".format(s=self.font_leading))
             self.font_advance_table = []
             for x in range(0,self.num_glyphs):
-                self.font_advance_table.append(stream.read('intle:16'))
+                self.font_advance_table.append(datatypes.SI16(stream))
             self.font_bounds_table = []
             for x in range(0,self.num_glyphs):
                 self.font_bounds_table.append(datatypes.Rect(stream))
-            self.kerning_count = stream.read('uintle:16')
+            self.kerning_count = datatypes.UI16(stream)
             self.font_kerning_table = []
             for x in range(0,self.kerning_count):
                 self.font_kerning_table.append(datatypes.KerningRecord(stream,
@@ -702,10 +702,10 @@ class DefineFont3(Tag):
     
 class SymbolClass(Tag):
     def parse(self,stream):
-        num_symbols = stream.read('uintle:16')
+        num_symbols = datatypes.UI16(stream)
         self.symbols = []
         for x in range(0,num_symbols):
-            new_symbol = {'tag': stream.read('uintle:16'),
+            new_symbol = {'tag': datatypes.UI16(stream),
                          'name': datatypes.string(stream)}
             self.symbols.append(new_symbol)
 
@@ -715,7 +715,7 @@ class Metadata(Tag):
 
 class DefineScalingGrid(Tag):
     def parse(self,stream):
-        self.character_id = stream.read('uintle:16')
+        self.character_id = datatypes.UI16(stream)
         self.splitter = datatypes.Rect(stream)
 
 class DoABC(Tag):
@@ -723,7 +723,7 @@ class DoABC(Tag):
 
 class DefineShape4(Tag):
     def parse(self,stream):
-        self.shape_id = stream.read('uintle:16')
+        self.shape_id = datatypes.UI16(stream)
         self.shape_bounds = datatypes.Rect(stream)
         self.edge_bounds = datatypes.Rect(stream)
         stream.pos += 5
@@ -765,7 +765,7 @@ class DefineBinaryData(Tag):
 
 class DefineFontName(Tag):
     def parse(self,stream):
-        self.font_id = stream.read('uintle:16')
+        self.font_id = datatypes.UI16(stream)
         self.font_name = datatypes.string(stream)
         self.font_copyright = datatypes.string(stream)
 

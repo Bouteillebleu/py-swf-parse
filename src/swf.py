@@ -18,14 +18,15 @@ class Swf(object):
         self._bitstream = ConstBitStream(f)
         try:
             self.parse_header()
+            self.display_header()
             self.parse_tags()
         finally:
             f.close()
     
     def parse_header(self):
         file_type = self._bitstream.read('bytes:3')
-        self.version = self._bitstream.read('uintle:8')
-        self.size = self._bitstream.read('uintle:32')
+        self.version = datatypes.UI8(self._bitstream)
+        self.size = datatypes.UI32(self._bitstream)
         if file_type == "FWS":
             self.compressed = False
         elif file_type == "CWS":
@@ -37,7 +38,7 @@ class Swf(object):
             self._bitstream.pos = 64
         self.framesize = datatypes.Rect(self._bitstream)
         self.framerate = datatypes.Fixed8(self._bitstream)
-        self.framecount = self._bitstream.read('uintle:16')
+        self.framecount = datatypes.UI16(self._bitstream)
 
     def display_header(self):
         log("Compressed: {s}".format(s=self.compressed))
@@ -57,7 +58,7 @@ class Swf(object):
             current_tag_length = tag_header & 0x3F # Only keep bottom 6 bits
             if current_tag_length == 0x3f:
                 # If it's actually 63, use the long record header form instead.
-                current_tag_length = self._bitstream.read('intle:32')
+                current_tag_length = datatypes.SI32(self._bitstream)
             #log("Current tag type: {s}".format(s=current_tag_type))
             #log("Current tag length: {s}".format(s=current_tag_length))
             tag_stream = self._bitstream.read('bits:{0}'.format(current_tag_length*8))

@@ -6,8 +6,112 @@ Created on 20 Oct 2011
 from actions import ActionFactory
 from log import log
 
+# TODO: Likewise for floating-point types?
+# (See p15 of v19 spec for reference of what the floating-point types are.)
+
+# == Integer types
+
+class BaseInt(object):
+    def __mul__(self, other):
+        return self.value * other
+
+    def __str__(self):
+        return str(self.value)
+
+class SI8(BaseInt):
+    def __init__(self,stream):
+        stream.bytealign()
+        self.value = stream.read('intle:8')
+        
+class SI16(BaseInt):
+    def __init__(self,stream):
+        stream.bytealign()
+        self.value = stream.read('intle:16')
+        
+class SI32(BaseInt):
+    def __init__(self,stream):
+        stream.bytealign()
+        self.value = stream.read('intle:32')
+        
+class UI8(BaseInt):
+    def __init__(self,stream):
+        stream.bytealign()
+        self.value = stream.read('uintle:8')
+
+class UI16(BaseInt):
+    def __init__(self,stream):
+        stream.bytealign()
+        self.value = stream.read('uintle:16')
+        
+class UI32(BaseInt):
+    def __init__(self,stream):
+        stream.bytealign()
+        self.value = stream.read('uintle:32')
+
+# == Fixed point types
+        
+class Fixed8(object):
+    def __init__(self,stream):
+        # TODO: Fixed8 numbers must be byte-aligned (p15 of v19 spec);
+        # add a manual align here to reflect this.
+        # stream.bytealign()
+        self.low = UI8(stream)
+        self.high = UI8(stream)
+    
+    def __str__(self):
+        return "{0}.{1}".format(self.high,self.low)
+
+class Fixed(object):
+    def __init__(self,stream):
+        # TODO: Fixed numbers must be byte-aligned (p15 of v19 spec);
+        # add a manual align here to reflect this.
+        # stream.bytealign()
+        self.low = UI16(stream)
+        self.high = UI16(stream)
+    
+    def __str__(self):
+        return "{0}.{1}".format(self.high,self.low)
+
+# == Floating point types
+
+class BaseFloat(object):
+    def __str__(self):
+        return str(self.value)
+
+# TODO: Decoding for FLOAT16, as the bitstring library doesn't
+# automatically do half-precision float decoding for us.
+# From p16 of v19 of the SWF spec:
+# * 1 bit for the sign
+# * 5 bits for the exponent, with an exponent bias of 16
+# * 10 bits for the mantissa
+
+class Float(BaseFloat):
+    def __init__(self,stream):
+        self.value = stream.read('floatle:32')
+
+class Double(BaseFloat):
+    def __init__(self,stream):
+        self.value = stream.read('floatle:64')
+        
+class EncodedU32(object):
+    def __init__(self,stream):
+        self.value = 0
+        for byte in xrange(0,5):
+            last_byte = stream.read('bool')
+            byte_content = stream.read('uint:7')
+            self.value += byte_content * math.pow(2,7*byte)
+            if last_byte:
+                break
+                
+    def __str__(self):
+        return "{0}".format(self.value)
+
 class Rect(object):
     def __init__(self,stream):
+        # TODO: Rectangle records must be byte-aligned (p22 of v19 spec);
+        # add a manual align here to reflect this.
+        # stream.bytealign()
+        # (I think it needs to happen at the start at least.)
         # Read the Nbits field - the first 5 bits - to find the size of the next ones.
         self.nbits = stream.read('uint:5')
         if self.nbits == 0:
@@ -29,41 +133,12 @@ class Rect(object):
                                                                    self.y_min,
                                                                    self.y_max)
 
-class Fixed8(object):
-    def __init__(self,stream):
-        self.low = stream.read('uintle:8')
-        self.high = stream.read('uintle:8')
-    
-    def __str__(self):
-        return "{0}.{1}".format(self.high,self.low)
-
-class Fixed(object):
-    def __init__(self,stream):
-        self.low = stream.read('uintle:16')
-        self.high = stream.read('uintle:16')
-    
-    def __str__(self):
-        return "{0}.{1}".format(self.high,self.low)
-
-class EncodedU32(object):
-    def __init__(self,stream):
-        self.value = 0
-        for byte in xrange(0,5):
-            last_byte = stream.read('bool')
-            byte_content = stream.read('uint:7')
-            self.value += byte_content * math.pow(2,7*byte)
-            if last_byte:
-                break
-                
-    def __str__(self):
-        return "{0}".format(self.value)
-
 class Rgb(object):
     def __init__(self,stream):
         stream.bytealign()
-        self.r = stream.read('uintle:8')
-        self.g = stream.read('uintle:8')
-        self.b = stream.read('uintle:8')
+        self.r = UI8(stream)
+        self.g = UI8(stream)
+        self.b = UI8(stream)
     
     def __str__(self):
         return "({0},{1},{2})".format(self.r,self.g,self.b)
@@ -71,16 +146,20 @@ class Rgb(object):
 class Rgba(object):
     def __init__(self,stream):
         stream.bytealign()
-        self.r = stream.read('uintle:8')
-        self.g = stream.read('uintle:8')
-        self.b = stream.read('uintle:8')
-        self.a = stream.read('uintle:8')
+        self.r = UI8(stream)
+        self.g = UI8(stream)
+        self.b = UI8(stream)
+        self.a = UI8(stream)
     
     def __str__(self):
         return "({0},{1},{2},{3})".format(self.r,self.g,self.b,self.a)
 
 class Cxform(object):
     def __init__(self,stream):
+        # TODO: CXFORM records must be byte-aligned (p24 of v19 spec);
+        # add a manual align here to reflect this.
+        # stream.bytealign()
+        # (I think it needs to happen at the start at least.)
         self.has_add_terms = stream.read('bool')
         self.has_mult_terms = stream.read('bool')
         n_bits = stream.read('uint:4')
@@ -106,6 +185,10 @@ class Cxform(object):
 
 class CxformWithAlpha(object):
     def __init__(self,stream):
+        # TODO: CXFORMWITHALPHA records must be byte-aligned (p26 of v19 spec);
+        # add a manual align here to reflect this.
+        # stream.bytealign()
+        # (I think it needs to happen at the start at least.)
         self.has_add_terms = stream.read('bool')
         self.has_mult_terms = stream.read('bool')
         n_bits = stream.read('uint:4')
@@ -133,6 +216,10 @@ class CxformWithAlpha(object):
 
 class Matrix(object):
     def __init__(self,stream):
+        # TODO: Matrix records must be byte-aligned (p22 of v19 spec);
+        # add a manual align here to reflect this.
+        # stream.bytealign()
+        # (I think it needs to happen at the start at least.)
         self.has_scale = stream.read('bool')
         if self.has_scale:
             n_scale = stream.read('uint:5')
@@ -173,7 +260,7 @@ class Gradient(object):
         self.num_gradients = stream.read('uint:4')
         self.gradient_records = []
         for n in range(self.num_gradients):
-            new_gradient = {'ratio': stream.read('uintle:8')}
+            new_gradient = {'ratio': UI8(stream)}
             if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
                 new_gradient['color'] = Rgb(stream)
             else:
@@ -186,7 +273,7 @@ class FocalGradient(object):
         self.num_gradients = stream.read('uint:4')
         self.gradient_records = []
         for n in range(num_gradients):
-            new_gradient = {'ratio': stream.read('uintle:8')}
+            new_gradient = {'ratio': UI8(stream)}
             if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
                 new_gradient['color'] = Rgb(stream)
             else:
@@ -213,16 +300,16 @@ class ClipActions(object):
 class ClipActionRecord(object):
     def __init__(self,stream,swf_version):
         self.event_flags = ClipEventFlags(stream,swf_version)
-        self.action_record_size = stream.read('uintle:32')
+        self.action_record_size = UI32(stream)
         initial_bytepos = stream.bytepos
         if hasattr(self.event_flags,"clip_event_key_press") and self.event_flags.clip_event_key_press == True:
-            self.key_code = stream.read('uintle:8')
+            self.key_code = UI8(stream)
         self.actions = []
         while stream.bytepos < initial_bytepos + self.action_record_size:
-            action_code = stream.read('uintle:8')
+            action_code = UI8(stream)
             action_length = 0
             if action_code > 0x7F:
-                action_length = stream.read('uintle:16')
+                action_length = UI16(stream)
             action_stream = stream.read('bits:{0}'.format(action_length*8))
             self.actions.append(ActionFactory.new_action(action_stream,
                                                          action_code,
@@ -421,6 +508,8 @@ class StyleChangeRecord(object):
         # TODO: Whether this is byte-aligned depends on whether:
         # (a) state_new_styles is set and True (if not, byte-align at the end)
         # (b) FillStyles and/or LineStyles have byte-aligned fields at start
+        #     * FillStyleArray starts with a UI8, so must be byte-aligned.
+        #     * Likewise for LineStyleArray.
         if hasattr(self,"state_new_styles") and self.state_new_styles:
             # TODO: Fix this up, probably turn these into lists.
             self.fill_styles = FillStyleArray(stream,calling_tag)
@@ -455,27 +544,31 @@ class CurvedEdgeRecord(object):
         self.type_flag = 1
         self.straight_flag = 0
         self.num_bits = stream.read('uint:4')
+        log("DEBUG: NumBits: {s}".format(s=self.num_bits))
         num_bits_format = 'int:%d' % (self.num_bits+2)
         self.control_delta_x = stream.read(num_bits_format)
+        log("DEBUG: ControlDeltaX: {s}".format(s=self.control_delta_x))
         self.control_delta_y = stream.read(num_bits_format)
+        log("DEBUG: ControlDeltaY: {s}".format(s=self.control_delta_y))
         self.anchor_delta_x = stream.read(num_bits_format)
+        log("DEBUG: AnchorDeltaX: {s}".format(s=self.anchor_delta_x))
         self.anchor_delta_y = stream.read(num_bits_format)
+        log("DEBUG: AnchorDeltaY: {s}".format(s=self.anchor_delta_y))
         #stream.bytealign()
         # Whether this should be byte-aligned depends on what comes next.
 
 class FillStyleArray(object):
     def __init__(self,stream,calling_tag):
-        stream.bytealign() # because FillStyleArray starts with UI8.
-        self.fill_style_count = stream.read('uintle:8')
+        self.fill_style_count = UI8(stream)
         log("DEBUG: FillStyleCount: {s}".format(s=self.fill_style_count))
         total = self.fill_style_count
         if self.fill_style_count == 0xFF and calling_tag in ('DefineShape2',
                                                              'DefineShape3'):
-            self.fill_style_count_extended = stream.read('uintle:16')
+            self.fill_style_count_extended = UI16(stream)
             log("DEBUG: FillStyleCountExtended: {s}".format(s=self.fill_style_count_extended))
             total = self.fill_style_count_extended
         self.fill_styles = []
-        for x in xrange(total):
+        for x in xrange(total.value):
             self.fill_styles.append(FillStyle(stream,calling_tag))
     
     def __str__(self):
@@ -494,8 +587,7 @@ class FillStyle(object):
                    0x43 : 'non-smoothed clipped bitmap' }
 
     def __init__(self,stream,calling_tag):
-        stream.bytealign()
-        self.fill_style_type = stream.read("uintle:8")
+        self.fill_style_type = UI8(stream)
         if self.fill_style_type == 0x00: # solid
             if calling_tag == "DefineShape" or calling_tag == "DefineShape2":
                 self.color = Rgb(stream)
@@ -509,17 +601,16 @@ class FillStyle(object):
                 self.gradient = Gradient(stream,calling_tag)
         if self.fill_style_type in (0x40,0x41,0x42,0x43): # bitmap
             stream.bytealign()
-            self.bitmap_id = stream.read("uintle:16")
+            self.bitmap_id = UI16(stream)
             self.bitmap_matrix = Matrix(stream)
 
 class LineStyleArray(object):
     def __init__(self,stream,calling_tag):
-        stream.bytealign()
-        self.line_style_count = stream.read('uintle:8')
+        self.line_style_count = UI8(stream)
         log("DEBUG: LineStyleCount: {s}".format(s=self.line_style_count))
         total = self.line_style_count
         if self.line_style_count == 0xFF:
-            self.line_style_count_extended = stream.read('uintle:16')
+            self.line_style_count_extended = UI16(stream)
             log("DEBUG: LineStyleCountExtended: {s}".format(s=self.line_style_count_extended))
             total = self.line_style_count_extended
         self.line_styles = []
@@ -527,7 +618,7 @@ class LineStyleArray(object):
             linestyle_class = LineStyle
         else:
             linestyle_class = LineStyle2
-        for x in xrange(total):
+        for x in xrange(total.value):
             self.line_styles.append(linestyle_class(stream,calling_tag))
 
 class LineStyle(object):
@@ -540,16 +631,16 @@ class LineStyle(object):
 
 class LineStyle2(object):
     def __init__(self,stream,calling_tag):
-        self.width = stream.read("uintle:16")
-        self.start_cap_style = stream.read("uint:2")
-        self.join_style = stream.read("uint:2")
-        self.has_fill_flag = stream.read("bool")
-        self.no_h_scale_flag = stream.read("bool")
-        self.no_v_scale_flag = stream.read("bool")
-        self.pixel_hinting_flag = stream.read("bool")
+        self.width = UI16(stream)
+        self.start_cap_style = stream.read('uint:2')
+        self.join_style = stream.read('uint:2')
+        self.has_fill_flag = stream.read('bool')
+        self.no_h_scale_flag = stream.read('bool')
+        self.no_v_scale_flag = stream.read('bool')
+        self.pixel_hinting_flag = stream.read('bool')
         stream.pos += 5
-        self.no_close = stream.read("bool")
-        self.end_cap_style = stream.read("uint:2")
+        self.no_close = stream.read('bool')
+        self.end_cap_style = stream.read('uint:2')
         if self.join_style == 2:
             self.miter_limit_factor = Fixed8(stream)
         if self.has_fill_flag:
@@ -560,12 +651,12 @@ class LineStyle2(object):
 class KerningRecord(object):
     def __init__(self,stream,font_flags_wide_codes):
         if font_flags_wide_codes:
-            self.font_kerning_code_1 = stream.read('uintle:16')
-            self.font_kerning_code_2 = stream.read('uintle:16')
+            self.font_kerning_code_1 = UI16(stream)
+            self.font_kerning_code_2 = UI16(stream)
         else:
-            self.font_kerning_code_1 = stream.read('uintle:8')
-            self.font_kerning_code_2 = stream.read('uintle:8')
-        self.font_kerning_adjustment = stream.read('intle:16')
+            self.font_kerning_code_1 = UI8(stream)
+            self.font_kerning_code_2 = UI8(stream)
+        self.font_kerning_adjustment = SI16(stream)
             
             
 # ========

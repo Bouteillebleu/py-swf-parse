@@ -11,7 +11,6 @@ class ActionFactory(object):
     def new_action(stream,action_type,action_length):
         action_class = class_from_action_number(action_type)
         if action_class is not None:
-            #print "  Creating new action: {0}, length {1}".format(action_class.__name__,action_length)
             return action_class(stream,action_type,action_length)
         else:
             return Action(stream,action_type,action_length)
@@ -607,7 +606,7 @@ class ActionExtends(Action):
 
 class ActionGotoFrame(Action):
     def parse(self,stream):
-        self.frame = stream.read('uintle:16')
+        self.frame = datatypes.UI16(stream)
     
     def display(self):
         log("Frame: {s}".format(s=self.frame))
@@ -623,14 +622,14 @@ class ActionGetURL(Action):
         
 class ActionStoreRegister(Action):
     def parse(self,stream):
-        self.register_number = stream.read('uintle:8')
+        self.register_number = datatypes.UI8(stream)
     
     def display(self):
         log("RegisterNumber: {s}".format(self.register_number))
 
 class ActionConstantPool(Action):
     def parse(self,stream):
-        self.count = stream.read('uintle:16')
+        self.count = datatypes.UI16(stream)
         self.constant_pool = []
         for i in range(0,self.count):
             self.constant_pool.append(datatypes.string(stream))
@@ -642,8 +641,8 @@ class ActionConstantPool(Action):
 
 class ActionWaitForFrame(Action):
     def parse(self,stream):
-        self.frame = stream.read('uintle:16')
-        self.skip_count = stream.read('uintle:8')
+        self.frame = datatypes.UI16(stream)
+        self.skip_count = datatypes.UI8(stream)
     
     def display(self):
         log("Frame: {s}".format(s=self.frame))
@@ -665,7 +664,7 @@ class ActionGoToLabel(Action):
 
 class ActionWaitForFrame2(Action):
     def parse(self,stream):
-        self.skip_count = stream.read('uintle:8')
+        self.skip_count = datatypes.UI8(stream)
     
     def display(self):
         log("SkipCount: {s}".format(s=self.skip_count))
@@ -673,8 +672,8 @@ class ActionWaitForFrame2(Action):
 class ActionDefineFunction2(Action):
     def parse(self,stream):
         self.function_name = datatypes.string(stream)
-        self.num_params = stream.read('uintle:16')
-        self.register_count = stream.read('uintle:8')
+        self.num_params = datatypes.UI16(stream)
+        self.register_count = datatypes.UI8(stream)
         self.preload_parent_flag = stream.read('bool')
         self.preload_root_flag = stream.read('bool')
         self.suppress_super_flag = stream.read('bool')
@@ -687,17 +686,17 @@ class ActionDefineFunction2(Action):
         self.preload_global_flag = stream.read('bool')
         self.parameters = []
         for i in range(0,self.num_params):
-            self.parameters.append({'register': stream.read('uintle:8'),
+            self.parameters.append({'register': datatypes.UI8(stream),
                                     'param_name': datatypes.string(stream)
                                     })
-        self.code_size = stream.read('uintle:16')
+        self.code_size = datatypes.UI16(stream)
         initial_bytepos = stream.bytepos
         self.actions = []
         while stream.pos < stream.len and stream.bytepos < initial_bytepos + self.code_size:
-            action_code = stream.read('uintle:8')
+            action_code = datatypes.UI8(stream)
             action_length = 0
             if action_code > 0x7F:
-                action_length = stream.read('uintle:16')
+                action_length = datatypes.UI16(stream)
             action_stream = stream.read('bits:{0}'.format(action_length*8))
             self.actions.append(ActionFactory.new_action(action_stream,
                                                          action_code,
@@ -733,21 +732,21 @@ class ActionTry(Action):
         self.catch_in_register_flag = stream.read('bool')
         self.finally_block_flag = stream.read('bool')
         self.catch_block_flag = stream.read('bool')
-        self.try_size = stream.read('uintle:16')
-        self.catch_size = stream.read('uintle:16')
-        self.finally_size = stream.read('uintle:16')
+        self.try_size = datatypes.UI16(stream)
+        self.catch_size = datatypes.UI16(stream)
+        self.finally_size = datatypes.UI16(stream)
         if self.catch_in_register_flag == False:
             self.catch_name = datatypes.string(stream)
         else:
-            self.catch_register = stream.read('uintle:8')
+            self.catch_register = datatypes.UI8(stream)
         # TryBody
         initial_bytepos = stream.bytepos
         self.try_body = []
         while stream.bytepos < initial_bytepos + self.try_size:
-            action_code = stream.read('uintle:8')
+            action_code = datatypes.UI8(stream)
             action_length = 0
             if action_code > 0x7F:
-                action_length = stream.read('uintle:16')
+                action_length = datatypes.UI16(stream)
             action_stream = stream.read('bits:{0}'.format(action_length*8))
             self.try_body.append(ActionFactory.new_action(action_stream,
                                                           action_code,
@@ -756,10 +755,10 @@ class ActionTry(Action):
         initial_bytepos = stream.bytepos
         self.catch_body = []
         while stream.bytepos < initial_bytepos + self.catch_size:
-            action_code = stream.read('uintle:8')
+            action_code = datatypes.UI8(stream)
             action_length = 0
             if action_code > 0x7F:
-                action_length = stream.read('uintle:16')
+                action_length = datatypes.UI16(stream)
             action_stream = stream.read('bits:{0}'.format(action_length*8))
             self.catch_body.append(ActionFactory.new_action(action_stream,
                                                             action_code,
@@ -769,10 +768,10 @@ class ActionTry(Action):
         initial_bytepos = stream.bytepos
         self.finally_body = []
         while stream.bytepos < initial_bytepos + self.finally_size:
-            action_code = stream.read('uintle:8')
+            action_code = datatypes.UI8(stream)
             action_length = 0
             if action_code > 0x7F:
-                action_length = stream.read('uintle:16')
+                action_length = datatypes.UI16(stream)
             action_stream = stream.read('bits:{0}'.format(action_length*8))
             self.finally_body.append(ActionFactory.new_action(action_stream,
                                                               action_code,
@@ -808,14 +807,14 @@ class ActionTry(Action):
 
 class ActionWith(Action):
     def parse(self,stream):
-        self.size = stream.read('uintle:16')
+        self.size = datatypes.UI16(stream)
         initial_bytepos = stream.bytepos
         self.actions = []
         while stream.bytepos < initial_bytepos + self.code_size:
-            action_code = stream.read('uintle:8')
+            action_code = datatypes.UI8(stream)
             action_length = 0
             if action_code > 0x7F:
-                action_length = stream.read('uintle:16')
+                action_length = datatypes.UI16(stream)
             action_stream = stream.read('bits:{0}'.format(action_length*8))
             self.actions.append(ActionFactory.new_action(action_stream,
                                                          action_code,
@@ -830,23 +829,23 @@ class ActionWith(Action):
 
 class ActionPush(Action):
     def parse(self,stream):
-        self.type = stream.read('uintle:8')
+        self.type = datatypes.UI8(stream)
         if self.type == 0:
             self.string = datatypes.string(stream)
         elif self.type == 1:
-            self.float = stream.read('floatle:32')
+            self.float = datatypes.Float(stream)
         elif self.type == 4:
-            self.register_number = stream.read('uintle:8')
+            self.register_number = datatypes.UI8(stream)
         elif self.type == 5:
-            self.boolean = stream.read('uintle:8')
+            self.boolean = datatypes.UI8(stream)
         elif self.type == 6:
-            self.double = stream.read('floatle:64')
+            self.double = datatypes.Double(stream)
         elif self.type == 7:
-            self.integer = stream.read('uintle:32')
+            self.integer = datatypes.UI32(stream)
         elif self.type == 8:
-            self.constant_8 = stream.read('uintle:8')
+            self.constant_8 = datatypes.UI8(stream)
         elif self.type == 9:
-            self.constant_16 = stream.read('uintle:16')
+            self.constant_16 = datatypes.UI16(stream)
     
     def display(self):
         log("Type: {s}".format(s=self.type))
@@ -869,7 +868,7 @@ class ActionPush(Action):
 
 class ActionJump(Action):
     def parse(self,stream):
-        self.branch_offset = stream.read('intle:16')
+        self.branch_offset = datatypes.SI16(stream)
     
     def display(self):
         log("BranchOffset: {s}".format(s=self.branch_offset))
@@ -889,18 +888,18 @@ class ActionGetURL2(Action):
 class ActionDefineFunction(Action):
     def parse(self,stream):
         self.function_name = datatypes.string(stream)
-        self.num_params = stream.read('uintle:16')
+        self.num_params = datatypes.UI16(stream)
         self.params = []
         for i in range(0,self.num_params):
             self.params.append(datatypes.string(stream))
-        self.code_size = stream.read('uintle:16')
+        self.code_size = datatypes.UI16(stream)
         initial_bytepos = stream.bytepos
         self.actions = []
         while stream.pos < stream.len and stream.bytepos < initial_bytepos + self.code_size:
-            action_code = stream.read('uintle:8')
+            action_code = datatypes.UI8(stream)
             action_length = 0
             if action_code > 0x7F:
-                action_length = stream.read('uintle:16')
+                action_length = datatypes.UI16(stream)
             action_stream = stream.read('bits:{0}'.format(action_length*8))
             self.actions.append(ActionFactory.new_action(action_stream,
                                                          action_code,
@@ -919,7 +918,7 @@ class ActionDefineFunction(Action):
 
 class ActionIf(Action):
     def parse(self,stream):
-        self.branch_offset = stream.read('intle:16')
+        self.branch_offset = datatypes.SI16(stream)
     
     def display(self):
         log("BranchOffset: {s}".format(s=self.branch_offset))
@@ -937,7 +936,7 @@ class ActionGotoFrame2(Action):
         self.scene_bias_flag = stream.read('bool')
         self.play_flag = stream.read('bool')
         if self.scene_bias_flag:
-            self.scene_bias = stream.read('uintle:16')
+            self.scene_bias = datatypes.UI16(stream)
     
     def display(self):
         log("SceneBiasFlag: {s}".format(s=self.scene_bias_flag))
